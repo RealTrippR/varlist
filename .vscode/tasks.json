@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build_llvlenv",
+            "type": "shell",
+            "command": "make build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "build_test",
+            "dependsOn": [
+                "build_llvlenv"
+            ],
+            "type": "shell",
+            "command": "make -B",
+            "options": {
+                "cwd": "${workspaceFolder}/tests"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        }
+    ]
+}
