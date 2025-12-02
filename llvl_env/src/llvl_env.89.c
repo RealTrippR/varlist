@@ -27,18 +27,31 @@ env_i32 _env_atoi32(char* a, env_i64 digits)
     env_i8 i;
     for (i=0; i<digits ;++i) {
         double f;
+        env_i8 v;
         switch (m) {
         case 0:
             f = n_pow10(digits-i-1);
+            v = (a[i]-48);
             break;
         case 1:
             f = n_pow8(digits-i-1);
+            v = (a[i]-48);
             break;
         case 2:
             f = n_pow16(digits-i-1);
+            // hex is a special case.
+           
+            if (a[i]>='a') {
+                v = 10 + a[i]-'a';
+            }
+            else if (a[i]>='A') {
+                v = 10 + a[i]-'A';
+            } else {
+                v = (a[i]-48);
+            }
             break;
         }
-        n += (a[i]-48) * f;
+        n += v * f;
     }
     return n;
 }
@@ -62,18 +75,26 @@ env_i64 digits;
     env_i8 i;
     for (i=0; i<digits ;++i) {
         double f;
+        env_i8 v;
         switch (m) {
         case 0:
             f = n_pow10(digits-i-1);
+            v = (a[i]-48);
             break;
         case 1:
             f = n_pow8(digits-i-1);
+            v = (a[i]-48);
             break;
         case 2:
             f = n_pow16(digits-i-1);
+            // hex is a special case.
+            v = (a[i]-48);
+            if (v>'a') {
+                v = 10 + v-'a';
+            }
             break;
         }
-        n += (a[i]-48) * f;
+        n += v * f;
     }
     return n;
 }
