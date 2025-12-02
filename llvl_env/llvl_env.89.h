@@ -3,6 +3,7 @@
 
 typedef char                env_i8;
 typedef short               env_i16;
+typedef unsigned short      env_u16;
 typedef int                 env_i32;
 typedef int                 env_i64;
 typedef float               env_f32;

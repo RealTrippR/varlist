@@ -69,6 +69,11 @@ _is_floating_point:
 
 
 
+; a value is numeric if:
+; it begins with 0o and is comprised only of digits 0-7  (octal)
+; it begins with 0x and is comprised only of digits 0-16 (hexidecimal)
+; it only contains numeric characters
+
 ; MODIFIES R8, R9, R10, RDX, RAX
 ; ASSUMES R14 TO HOLD VALUE, R11 TO HOLD VALUE LENGTH
 ; RETURN IS_NUMERIC IN AL
@@ -97,24 +102,39 @@ _is_numeric:
     mov r10, 0
     mov r9, 0
 
+    ; check if it may be octal or hex
+    mov al, [rdx]
+    mov rax, rdx
+    add rax, 1
+    cmp byte [rdx], 48
+    cmove rdx, rax ; inc rdx, non branching.
+    
+    ; check if data == end
+    cmp rdx, r8
+    je .false
+
     mov rax, 1
-    ; check if it may be octal
+    cmp byte [rdx], 'o'
+    cmove r10, [rdx]
+    cmove r9, rax
+    and r10, 0xFF ; TRIM R10
+
     cmp byte [rdx], 'o'
     je .skip_alpha_check
 
-    cmove r10, [rdx]
-    cmove r9, rax
-
     ; check if it may be hexadecimal
     cmp byte [rdx], 'x'
-    je .skip_alpha_check
-
     cmove r10, [rdx]
     cmove r9, rax
+    and r10, 0xFF ; TRIM R10
+
+    cmp byte [rdx], 'x'
+    je .skip_alpha_check
 
     add rdx, r9
     
     
+    ; check if data == end
     cmp rdx, r8
     je .false
 
@@ -126,6 +146,9 @@ _is_numeric:
     cmp al, '.'
     je .special_char_period
 
+    cmp r10, 'x'
+    je .handle_hex_alpha_check
+
     ; check if it's alpha
     cmp al, '0'
     jl .false
@@ -133,6 +156,7 @@ _is_numeric:
     jg .false
 
 .skip_alpha_check:
+.handle_hex_alpha_check.return:
 .special_char_period.return:
 
     inc rdx
@@ -160,7 +184,26 @@ _is_numeric:
     jmp .special_char_period.return
 
 
+.handle_hex_alpha_check:
+    ; check 0-9
+    cmp al, '0'
+    jb .check_upper_hex                
+    cmp al, '9'
+    jbe .handle_hex_alpha_check.return
 
+.check_upper_hex:
+    ; check A-F
+    cmp al, 'A'
+    jb .check_lower_hex
+    cmp al, 'F'
+    jbe .handle_hex_alpha_check.return
+
+.check_lower_hex:
+    ; check a-f
+    cmp al, 'a'
+    jb .false
+    cmp al, 'f'
+    jbe .handle_hex_alpha_check.return
 
 global _env_parse_arm64
 _env_parse_arm64:
@@ -401,7 +444,7 @@ _env_parse_arm64:
 
     ; complete finalize
     mov r11, 0 ; reset strlen
-    jmp ._main_itr_loop.continue       
+    jmp ._main_itr_loop.continue
 
 
 
