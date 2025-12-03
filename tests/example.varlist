@@ -1,4 +1,13 @@
-bad_key: value
+#VARLIST V2025.12
+
+key : value
+with_spaces : a value and a few more.
+
+; the varlist standard permits explicit type coercion to any of the following types: 
+; str, i32, i64, f32, f64.
+forced_str<str> : 128
+forced_i64<i64> : 256
+
 hex: 0xDAF
 octal: 0o5
 i32: 4

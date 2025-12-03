@@ -63,8 +63,8 @@ typedef struct {
 typedef struct {
     VAR_NODE_TYPE   type;
     var_i16         nameLength;
-    var_f64         value;
     char*           name;
+    var_f64         value;
 } VAR_NODE_F64;
 
 
@@ -75,10 +75,37 @@ typedef enum {
     VAR_PARSE_DISALLOW_HEX   = 0x4
 } VAR_PARSE_FLAGS_T;
 
+/*
+@param
+data - the varlist source to validate.
+data_len - the length of the varlist source.
+offending_line_buffer - a buffer of integers to hold the offending lines. An element of -1 indicates the end of the offending lines.
+offending_line_buffer_size - the size of the offending line buffer. 
+
+@returns
+VAR_SUCCESS: If there are no offending lines.
+VAR_ERR_INVALID: If there are offending lines.
+*/
 VAR_RESULT VAR_CHECK_VALIDITY(const var_i8* data, var_size_t data_len, var_i32* offending_line_buffer, var_i32 offending_line_buffer_size);
 
-VAR_RESULT VAR_PARSE(const var_i8* data, var_size_t data_len, var_size_t* length_used, var_i8* node_buffer);
+/*
+@param
+data - the varlist source to validate.
+data_len - the length of the varlist source.
+length_used - a pointer to the number of bytes needed for the structure buffer.
+structure_buffer - a buffer to hold the structure.
 
+@returns
+VAR_SUCCESS: EVERY CALL
+*/
+VAR_RESULT VAR_PARSE(const var_i8* data, var_size_t data_len, var_size_t* length_used, var_i8* structure_buffer);
+
+/*
+@param
+
+@returns
+VAR_SUCCESS: EVERY CALL
+*/
 VAR_RESULT VAR_STORE_STRINGS(void *structure_buffer, var_size_t structure_size, void *string_buffer, var_i64 *string_size, char null_terminate);
 
 var_i8 VAR_SIZEOF_NODE(const void* node);

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "test_common.h"
-#define VAR_FILE "example.varlist"
+#define VAR_FILE "forced.varlist"
 
 
 
@@ -70,6 +70,8 @@ int main(argc, argv)
         
         printf("Successfully parsed .env file: %s", VAR_FILE);
 
+                print_nodes((VAR_NODE_BASE*)structure_buffer,structure_buffer+structure_size);
+
         var_size_t string_size=0;
         VAR_STORE_STRINGS(structure_buffer, structure_size, NULL, &string_size, 0);
 
@@ -79,7 +81,6 @@ int main(argc, argv)
             VAR_STORE_STRINGS(structure_buffer, structure_size, str_buffer, 0, 0);
         }
 
-        print_nodes((VAR_NODE_BASE*)structure_buffer,structure_buffer+structure_size);
     } 
     else {
         printf(".env file is empty.\n");

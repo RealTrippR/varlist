@@ -1,6 +1,7 @@
 #include "../llvl_var.89.h"
 #include "../pow_lookup.89.h"
 #include <stdint.h>
+#include "../deps/streql/streqlasm.h"
 #ifndef NDEBUG
 #include <stdio.h>
 #include <string.h>
@@ -129,7 +130,7 @@ var_i64 len;
     }
     var_i8 i;
     // get . indx
-    var_i8 dt_i = 0;
+    var_i8 dt_i = len;
     for (i=0; i<len ;++i) {
         if (a[i]=='.') {
             dt_i = i;
@@ -166,7 +167,7 @@ var_i64 len;
     }
     var_i16 i;
     // get . indx
-    var_i16 dt_i = 0;
+    var_i16 dt_i = len;
     for (i=0; i<len ;++i) {
         if (a[i]=='.') {
             dt_i = i;
@@ -226,7 +227,61 @@ VAR_RESULT VAR_CHECK_VALIDITY(data, data_len, offending_line_buffer, offending_l
 
     for (; data<data_end; ++data)
     {
-        if (*data==':' && state!=0) {
+        // first check if this line is a key
+        // it is only if it has a ':'
+        const char* tmp = data;
+        for (; tmp < data_end; ++tmp) {
+            if (*tmp == '\n') {
+                data=tmp;
+                state = 0;
+                break; // skip to next line
+            } else if (*tmp == ':') {
+                // is valid key/value pair
+                break;
+            }
+        }
+
+
+        if (state == 0 && *data == '<') {
+            const char* end = NULL;
+            const char* cursor = data;
+            for (; cursor<data_end; ++cursor)
+            {
+                if (*cursor == '\n' || *cursor == ':') {
+                    break;
+                }
+                if (*cursor == '>') {
+                    end = cursor;
+                    break;
+                }
+            }
+            if (!end) {
+                if (offending_line_buffer_max_count && last_offending_line != line && offending_line_count <= offending_line_buffer_max_count-1) {
+                    offending_line_buffer[offending_line_count] = line;
+                    offending_line_count++;
+                    last_offending_line=line;
+                }
+            } else {
+                if (end - data < 4) {
+                    if (offending_line_buffer_max_count && last_offending_line != line && offending_line_count <= offending_line_buffer_max_count-1) {
+                        offending_line_buffer[offending_line_count] = line;
+                        offending_line_count++;
+                        last_offending_line=line;
+                    }
+                } else {
+                    const char* interior = data+1;
+                    if (!(strneql(interior, "i32",3) || strneql(interior, "i64",3) || strneql(interior, "f32",3) || strneql(interior, "f64",3) || strneql(interior, "str",3))) {
+                        if (offending_line_buffer_max_count && last_offending_line != line && offending_line_count <= offending_line_buffer_max_count-1) {
+                            offending_line_buffer[offending_line_count] = line;
+                            offending_line_count++;
+                            last_offending_line=line;
+                        }
+                    }
+                }
+
+                data=end;
+            }
+        } else if (*data==':' && state!=0) {
             state = 1;
             if (offending_line_buffer_max_count && last_offending_line != line && offending_line_count <= offending_line_buffer_max_count-1) {
                 offending_line_buffer[offending_line_count] = line;
@@ -370,8 +425,9 @@ VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *s
                     string_buffer = (char*) string_buffer + 1;
                 }
             }
-            else if (as_base->type == VAR_NODE_TYPE_I64 || as_base->type == VAR_NODE_TYPE_F64) {
-                VAR_NODE_F64* as_i64 = (VAR_NODE_F64*)as_base;
+            // VAR_NODE_TYPE_F64 or VAR_NODE_TYPE_I64
+            else {
+                VAR_NODE_I64* as_i64 = (VAR_NODE_I64*)as_base;
 
                 memcpy(string_buffer, as_i64->name, as_i64->nameLength);
                 as_i64->name = string_buffer;
@@ -381,7 +437,8 @@ VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *s
                     string_buffer = (char*) string_buffer + 1;
                 }
             }
-            structure = (char*)structure + VAR_SIZEOF_NODE(structure);
+            var_i8 s = VAR_SIZEOF_NODE(structure);
+            structure = (char*)structure + s;
         }
     }
     return VAR_SUCCESS;
@@ -392,8 +449,9 @@ VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *s
 
 
 
-
+#if defined( __GNUC__ )
 __attribute__((ms_abi))
+#endif
 extern int _var_parse_arm64();
 
 VAR_RESULT VAR_PARSE(data, data_len, length_used, node_buffer)

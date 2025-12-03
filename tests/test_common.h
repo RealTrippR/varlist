@@ -42,35 +42,35 @@ void print_nodes( VAR_NODE_BASE* base , void* end) {
         if (base->type == VAR_NODE_TYPE_STRING) {
             VAR_NODE_STRING* as_string = (VAR_NODE_STRING*)base;
             printf("\t === NODE: STRING ===\n");
-            printf("\t NAME: %.*s\n", as_string->nameLength, as_string->name);
-            printf("\t STRING: %.*s\n", as_string->valueLength, as_string->value);
+            printf("\t NAME: \"%.*s\"\n", as_string->nameLength, as_string->name);
+            printf("\t STRING: \"%.*s\"\n", as_string->valueLength, as_string->value);
             printf("\n");
         }
         else if (base->type == VAR_NODE_TYPE_I32) {
             VAR_NODE_I32* as_i32 = (VAR_NODE_I32*)base;
             printf("\t === NODE: I32 ===\n");
-            printf("\t NAME: %.*s\n", as_i32->nameLength, as_i32->name);
+            printf("\t NAME: \"%.*s\"\n", as_i32->nameLength, as_i32->name);
             printf("\t VALUE: %d\n", as_i32->value);
             printf("\n");
         }
         else if (base->type == VAR_NODE_TYPE_I64) {
             VAR_NODE_I64* as_i64 = (VAR_NODE_I64*)base;
             printf("\t === NODE: I64 ===\n");
-            printf("\t NAME: %.*s\n", as_i64->nameLength, as_i64->name);
+            printf("\t NAME: \"%.*s\"\n", as_i64->nameLength, as_i64->name);
             printf("\t VALUE: %"PRId64"\n", as_i64->value);
             printf("\n");
         }
         else if (base->type == VAR_NODE_TYPE_F32) {
             VAR_NODE_F32* as_f32 = (VAR_NODE_F32*)base;
             printf("\t === NODE: F32 ===\n");
-            printf("\t NAME: %.*s\n", as_f32->nameLength, as_f32->name);
+            printf("\t NAME: \"%.*s\"\n", as_f32->nameLength, as_f32->name);
             printf("\t VALUE: %f\n", as_f32->value);
             printf("\n");
         }
         else if (base->type == VAR_NODE_TYPE_F64) {
             VAR_NODE_F64* as_f64 = (VAR_NODE_F64*)base;
             printf("\t === NODE: F64 ===\n");
-            printf("\t NAME: %.*s\n", as_f64->nameLength, as_f64->name);
+            printf("\t NAME: \"%.*s\"\n", as_f64->nameLength, as_f64->name);
             printf("\t VALUE: %lf\n", as_f64->value);
             printf("\n");
         }

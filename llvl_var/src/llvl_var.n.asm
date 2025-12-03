@@ -154,8 +154,7 @@ _is_space:
 
 ; MODIFIES RDX, R8
 ; EXPECTS R14 TO HOLD ASCII BEGIN
-; RETURNS IN AL
-; RETURNS THE NUMBER OF DIGITS IN R9
+; RETURNS 0 OR 1 IN AL
 _is_floating_point:
     ; R14 IS THE CURSOR
     mov rdx, r14
@@ -332,6 +331,15 @@ _var_parse_arm64:
 
     sub rsp, 128 ; grow stack
     
+    ; RSP + 8 HOLDS TYPE OVERRIDE STATE, AS 8-BYTE
+    ; 0: NO-OVERRIDE
+    ; 2: i32
+    ; 3: f32
+    ; 4: i64
+    ; 5: f64
+    ; r: str
+    mov qword [rsp+8], 0
+
     ; SAVE R12 R13 R14 R15 RBX
     mov [rsp+56], r12
     mov [rsp+64], r13
@@ -392,6 +400,9 @@ _var_parse_arm64:
 
     mov al, [rcx];
 
+    cmp al, '<'
+    je .handle_type_override
+
     cmp al, ':'
     je .handle_colon
 
@@ -413,7 +424,7 @@ _var_parse_arm64:
     ; inc str len
     inc r11
 
-
+.handle_type_override.return:
 ._main_itr_loop.continue:
     inc rcx ; inc cur ptr
 
@@ -436,6 +447,30 @@ _var_parse_arm64:
     mov rax, 0
     ret
 ; END BODY _var_parse_arm64
+
+; MODIFIES RAX
+; if i32:
+; [rsp+8] = '2'
+; if i64:
+; [rsp+8] = '4'
+; if str:
+; [rsp+8] = 'r'
+.handle_type_override:
+    cmp byte [rcx+1], 'f'
+    je .handle_type_override.as_float
+
+    mov rax, [rcx+3]
+    mov [rsp+8], rax
+    add rcx, 5 ; inc cur ptr
+    jmp .handle_type_override.return
+        
+.handle_type_override.as_float:
+    mov rax, [rcx+3]
+    inc rax
+    mov [rsp+8], rax
+    add rcx, 5 ; inc cur ptr
+    jmp .handle_type_override.return
+
 
 .handle_last_char:
     ; inc str len
@@ -512,9 +547,7 @@ _var_parse_arm64:
             jmp .finalize_pair
 
 .finalize_pair:        
-
-
-
+    
         ; SAVE R8, R9, R10, RDX
         mov [rsp+96], r8
         mov [rsp+104], r9
@@ -528,6 +561,18 @@ _var_parse_arm64:
         mov r10, [rsp+112]
         mov rdx, [rsp+120]
         
+        ; CHECK TYPE OVERRIDE (For technical reasons this has to come after a call to _is_numeric!)
+        cmp byte [rsp+8], 'r'
+        je .finalize_string_pair
+        cmp byte [rsp+8], '2'
+        je .finalize_number_pair
+        cmp byte [rsp+8], '3'
+        je .finalize_number_pair
+        cmp byte [rsp+8], '4'
+        je .finalize_number_pair
+        cmp byte [rsp+8], '5'
+        je .finalize_number_pair
+
         cmp al, 0
 
         jne .finalize_number_pair
@@ -569,6 +614,12 @@ _var_parse_arm64:
     ; 2 = floating point
     mov [rsp+96], rax
 
+
+    cmp byte [rsp+8], '3'
+    je .finalize_as_float
+    cmp byte [rsp+8], '5'
+    je .finalize_as_float
+
     ; SAVE R8, RDX
     mov [rsp+112], r8
     mov [rsp+120], rdx
@@ -576,12 +627,8 @@ _var_parse_arm64:
     ; RESTORE R8, RDX
     mov r8,  [rsp+112]
     mov rdx, [rsp+120]
-    
-    ; STORE FLOAT STATE IN RSP+88
-    mov [rsp+88], rax
 
-
-    cmp byte [rsp+88], 1
+    cmp rax, 1
     je .finalize_as_float
     
 ; finalize as integer
@@ -592,6 +639,11 @@ _var_parse_arm64:
     ; EXPECTS R11 TO HOLD ASCII LEN
     ; EXPECTS R14 TO HOLD ASCII BEGIN
     
+    cmp byte [rsp+8], '2'
+    je .finalize_as_i32
+    cmp byte [rsp+8], '4'
+    je .finalize_as_i64
+
     mov [rsp+104], rdx
     mov [rsp+112], r11
     mov [rsp+120], r14
@@ -607,6 +659,11 @@ _var_parse_arm64:
     jmp .finalize_as_i64
 
 .finalize_as_float:
+    cmp byte [rsp+8], '3'
+    je .finalize_as_f32
+    cmp byte [rsp+8], '5'
+    je .finalize_as_f64
+
     cmp rax, 9
     jl .finalize_as_f32
 
@@ -810,10 +867,10 @@ _var_parse_arm64:
 
     mov word [r9], 4; type
     mov      [r9+2], rbx  ; nameLength
-    movsd    [r9+8], xmm0 ; value
-    mov      [r9+16], r13  ; name
-    
+    mov      [r9+8], r13  ; name
+    movsd    [r9+16], xmm0 ; value
 
+    
     ; advance write header
     add r9, 24 ;sizeof(ENV_NODE_F64)
 

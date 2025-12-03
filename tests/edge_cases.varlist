@@ -1,3 +1,5 @@
+#VARLIST V2025.12
+
 i32_min: -2147483647
 i32_actual_min: -2147483648
 
@@ -6,4 +8,5 @@ i32_max: 2147483647
 exceeds_int_limits: 9223372036854775807
 exceeds_int_limits_II: -9223372036854775808
 
-basic: 15
+expected_f32_neg: 5436.4032
+expected_f64_neg: 7845261930.4785261
