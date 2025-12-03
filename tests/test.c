@@ -1,8 +1,8 @@
-#include <llvl_env.89.h>
+#include <llvl_var.89.h>
 #include <stdio.h>
 #include <string.h>
 #include "test_common.h"
-#define VAR_FILE "example.varlist"
+#define VAR_FILE "edge_cases.varlist"
 
 
 
@@ -27,18 +27,18 @@ int main(argc, argv)
 
 
     
-    env_size_t needed_bytes = 0;
+    var_size_t structure_size = 0;
 
 
     printf("ENV_CHECK_VALIDITY MUST ALSO ENSURE THAT NO MORE THAN 300 DIGITS ARE PRESENT IN A NUMBER.\n");
     
-    env_i32 offendingLines[256];
-    ENV_RESULT result = ENV_CHECK_VALIDITY(fcontents, flen, offendingLines, sizeof(offendingLines));
+    var_i32 offendingLines[256];
+    VAR_RESULT result = VAR_CHECK_VALIDITY(fcontents, flen, offendingLines, sizeof(offendingLines));
      if (result<0) {
         printf(".env structure is invalid.\n");
 
         printf("offending lines:\n");
-        env_i32 i;
+        var_i32 i;
         for (i=0; i < 256; ++i) {
             if (offendingLines[i]==-1) {
                 break;
@@ -52,16 +52,16 @@ int main(argc, argv)
 
 
 
-    result = ENV_PARSE(fcontents, flen, &needed_bytes, NULL);
+    result = VAR_PARSE(fcontents, flen, &structure_size, NULL);
     if (result<0) {
         printf("Failed to parse .env file: %s\n", VAR_FILE);
         return -2;
     }
 
-    if (needed_bytes>0) 
+    if (structure_size>0) 
     {
-        env_i8 structure_buffer[needed_bytes];
-        result = ENV_PARSE(fcontents, flen, &needed_bytes, structure_buffer);
+        var_i8 structure_buffer[structure_size];
+        result = VAR_PARSE(fcontents, flen, &structure_size, structure_buffer);
 
         if (result<0) {
             printf("Failed to parse .env file: %s\n", VAR_FILE);
@@ -70,7 +70,16 @@ int main(argc, argv)
         
         printf("Successfully parsed .env file: %s", VAR_FILE);
 
-        print_nodes((ENV_NODE_BASE*)structure_buffer,structure_buffer+needed_bytes);
+        var_size_t string_size=0;
+        result = VAR_STORE_STRINGS(structure_buffer, structure_size, NULL, &string_size, false);
+
+        var_i8 str_buffer[string_size];
+        result = VAR_STORE_STRINGS(structure_buffer, structure_size, str_buffer, &string_size, false);
+
+
+
+
+        print_nodes((VAR_NODE_BASE*)structure_buffer,structure_buffer+structure_size);
     } 
     else {
         printf(".env file is empty.\n");

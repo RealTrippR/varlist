@@ -1,21 +1,132 @@
 section .data
-
+    ; abs limits
+    i32_limit_a_len dq  10
+    i32_limit_a db "2147483647"
+    i32_limit_h_len dq  8
+    i32_limit_h db"7FFFFFFF"
+    i32_limit_o_len dq  11
+    i32_limit_o db "17777777777"
 
 section .text
 
 
-extern _env_atoi32
-extern _env_atoi64
-extern _env_atof32
-extern _env_atof64
+extern _var_atoi32
+extern _var_atoi64
+extern _var_atof32
+extern _var_atof64
 
 
-
-
-global _env_is_space_c_entry
-_env_is_space_c_entry:
+global _var_is_space_c_entry
+_var_is_space_c_entry:
     mov al, cl
     jmp _is_space
+
+
+; CALL / RET
+; MODIFIES R14, RAX, R11, RDX
+; EXPECTS NUMERIC TYPE TO BE IN [RSP + 96]
+; EXPECTS R11 TO HOLD ASCII LEN
+; EXPECTS R14 TO HOLD ASCII BEGIN
+; RETURNS 1 IN AL IF ABS OF VALUE EXCEEDS I32 LIMIT
+_exceeds_i32_limit:
+    mov rax, r14
+    inc rax
+    mov rdx, R11
+    dec rdx
+    cmp byte [r14], '-'
+    cmove r14, rax
+    cmove r11, rdx
+
+
+    cmp byte [RSP + 96], 'x'
+    je  ._exceeds_i32_limit.as_hex
+
+    cmp byte [RSP + 96], 'o'
+    je  ._exceeds_i32_limit.as_octal
+
+    ; DEFAULT
+    ._exceeds_i32_limit.as_ascii:
+        ; CHECK IF THE VALUE IS LESS THAN OR LONGER THAN THE LITERAL
+        cmp r11, qword [rel i32_limit_a_len]
+        jg .exceeds
+        jl .short
+
+        lea rax, [rel i32_limit_a]
+
+
+        ; WRITE END TO R11
+        .ascii.itr:
+            cmp r11, 0
+            je .short
+
+            mov rdx, [rax]
+            cmp [r14], dl
+            jg .exceeds
+
+            inc r14
+            inc rax
+            dec r11
+            jmp .ascii.itr
+
+        mov al, 0
+        ret
+    ; HEX
+    ._exceeds_i32_limit.as_hex:
+        ; CHECK IF THE VALUE IS LESS THAN OR LONGER THAN THE LITERAL
+        cmp r11, qword [rel i32_limit_h_len]
+        jg .exceeds
+        jl .short
+
+        lea rax, [rel i32_limit_h]
+        
+        .hex.itr:
+            cmp r11, 0
+            je .short
+
+            mov rdx, [rax]
+            cmp [r14], dl
+            jg .exceeds
+
+            inc r14
+            inc rax
+            dec r11
+            jmp .hex.itr
+
+
+    ; OCTAL
+    ._exceeds_i32_limit.as_octal:
+        ; CHECK IF THE VALUE IS LESS THAN OR LONGER THAN THE LITERAL
+        cmp r11, qword [rel i32_limit_o_len]
+        jg .exceeds
+        jl .short
+
+        lea rax, [rel i32_limit_o]
+
+        .octal.itr:
+
+           cmp r11, 0
+            je .short
+
+            mov rdx, [rax]
+            cmp [r14], dl
+            jg .exceeds
+
+            inc r14
+            inc rax
+            dec r11
+            jmp .octal.itr
+
+.short:
+    mov al, 0
+    ret 
+.exceeds:
+    mov al, 1
+    ret
+
+
+    
+
+
 
 ; EXPECTS BYTE IN al
 ; RETURNS 0 OR 1 IN al
@@ -38,6 +149,8 @@ _is_space:
 .true:
     mov al, 1
     ret
+
+
 
 ; MODIFIES RDX, R8
 ; EXPECTS R14 TO HOLD ASCII BEGIN
@@ -149,6 +262,9 @@ _is_numeric:
     cmp r10, 'x'
     je .handle_hex_alpha_check
 
+    cmp al, '-'
+    je .skip_alpha_check
+    
     ; check if it's alpha
     cmp al, '0'
     jl .false
@@ -205,8 +321,8 @@ _is_numeric:
     cmp al, 'f'
     jbe .handle_hex_alpha_check.return
 
-global _env_parse_arm64
-_env_parse_arm64:
+global _var_parse_arm64
+_var_parse_arm64:
     ; check if the size of the data is 0, if so return
     cmp rdx, 0
     je .ret_success
@@ -319,7 +435,7 @@ _env_parse_arm64:
     add rsp, 128 ; shrink stack
     mov rax, 0
     ret
-; END BODY _env_parse_arm64
+; END BODY _var_parse_arm64
 
 .handle_last_char:
     ; inc str len
@@ -420,7 +536,7 @@ _env_parse_arm64:
     
 
 .finalize_string_pair:
-    add r8, 32 ;sizeof(ENV_NODE_STRING)
+    add r8, 32 ;sizeof(VAR_NODE_STRING)
     cmp r9, 0 ; check if write header is NULL
     jne .finalize_string_pair.write
 
@@ -440,7 +556,7 @@ _env_parse_arm64:
     cmp rdx, 0
 
     ; advance write header
-    add r9, 32 ;sizeof(ENV_NODE_STRING)
+    add r9, 32 ;sizeof(VAR_NODE_STRING)
 
     ; complete finalize
     mov r11, 0 ; reset strlen
@@ -464,16 +580,29 @@ _env_parse_arm64:
     ; STORE FLOAT STATE IN RSP+88
     mov [rsp+88], rax
 
-    mov rax, r11 ; mov value len to rax
-    jmp .get_digits
-.get_digits.return:
 
     cmp byte [rsp+88], 1
     je .finalize_as_float
     
 ; finalize as integer
-    cmp rax, 10
-    jl .finalize_as_i32
+
+    ; CALL / RET
+    ; MODIFIES R14, RAX, R11, RDX
+    ; EXPECTS NUMERIC TYPE TO BE IN [RSP + 96]
+    ; EXPECTS R11 TO HOLD ASCII LEN
+    ; EXPECTS R14 TO HOLD ASCII BEGIN
+    
+    mov [rsp+104], rdx
+    mov [rsp+112], r11
+    mov [rsp+120], r14
+
+    call _exceeds_i32_limit
+    mov rdx, [rsp+104]
+    mov r11, [rsp+112]
+    mov r14, [rsp+120]
+
+    cmp al, 0
+    je .finalize_as_i32
 
     jmp .finalize_as_i64
 
@@ -483,23 +612,9 @@ _env_parse_arm64:
 
     jmp .finalize_as_f64
 
-   
-; expects numeric type to be at [rsp+96]
-.get_digits:
-    ; check numeric type
-    cmp byte [rsp+96], 'o'
-    je .sub1
-
-    cmp byte [rsp+96], 'x'
-    je .sub1
-
-    jmp .get_digits.return
-.sub1:
-    dec rax
-    jmp .get_digits.return
 
 .finalize_as_i32:
-    add r8, 16 ;bytes written: inc by sizeof(ENV_NODE_I32)
+    add r8, 16 ;bytes written: inc by sizeof(VAR_NODE_I32)
 
     cmp r9, 0 ; check if write header is NULL
     jne .finalize_as_i32.write
@@ -523,7 +638,7 @@ _env_parse_arm64:
     mov rdx, r11
 
     sub rsp, 32
-    call _env_atoi32
+    call _var_atoi32
     add rsp, 32
 
     ; RESTORE
@@ -539,7 +654,7 @@ _env_parse_arm64:
     
 
     ; advance write header
-    add r9, 16 ;sizeof(ENV_NODE_I32)
+    add r9, 16 ;sizeof(VAR_NODE_I32)
 
     ; complete finalize
     mov r11, 0 ; reset strlen
@@ -552,7 +667,7 @@ _env_parse_arm64:
 
 
 .finalize_as_i64:
-    add r8, 24 ;bytes written: inc by sizeof(ENV_NODE_I64)
+    add r8, 24 ;bytes written: inc by sizeof(VAR_NODE_I64)
 
     cmp r9, 0 ; check if write header is NULL
     jne .finalize_as_i64.write
@@ -576,7 +691,7 @@ _env_parse_arm64:
     mov rdx, r11
 
     sub rsp, 32
-    call _env_atoi64
+    call _var_atoi64
     add rsp, 32
 
     ; RESTORE
@@ -593,7 +708,7 @@ _env_parse_arm64:
 
 
     ; advance write header
-    add r9, 24 ;sizeof(ENV_NODE_I64)
+    add r9, 24 ;sizeof(VAR_NODE_I64)
 
     ; complete finalize
     mov r11, 0 ; reset strlen
@@ -613,7 +728,7 @@ _env_parse_arm64:
 
 .finalize_as_f32:
 
-    add r8, 16 ;bytes written: inc by sizeof(ENV_NODE_F32)
+    add r8, 16 ;bytes written: inc by sizeof(VAR_NODE_F32)
 
     cmp r9, 0 ; check if write header is NULL
     jne .finalize_as_f32.write
@@ -635,7 +750,7 @@ _env_parse_arm64:
     mov rdx, r11
 
     sub rsp, 48
-    call _env_atof32
+    call _var_atof32
     add rsp, 48
 
     ; RESTORE
@@ -651,7 +766,7 @@ _env_parse_arm64:
     
 
     ; advance write header
-    add r9, 16 ;sizeof(ENV_NODE_F32)
+    add r9, 16 ;sizeof(VAR_NODE_F32)
 
     ; complete finalize
     mov r11, 0 ; reset strlen
@@ -660,7 +775,7 @@ _env_parse_arm64:
 ; finalize_as_f32 END
 
 .finalize_as_f64:
-    add r8, 24 ;bytes written: inc by sizeof(ENV_NODE_F64)
+    add r8, 24 ;bytes written: inc by sizeof(VAR_NODE_F64)
 
     cmp r9, 0 ; check if write header is NULL
     jne .finalize_as_f64.write
@@ -684,7 +799,7 @@ _env_parse_arm64:
     mov rdx, r11
 
     sub rsp, 48
-    call _env_atof64
+    call _var_atof64
     add rsp, 48
 
     ; RESTORE

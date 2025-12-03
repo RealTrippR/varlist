@@ -1,268 +1,14 @@
-#include "../llvl_env.89.h"
+#ifndef VAR_POW_LOOKUP_H
+#define VAR_POW_LOOKUP_H
+
 #ifndef NDEBUG
 #include <stdio.h>
 #endif
-extern char _env_is_space_c_entry(char c);
 
-static double n_pow8(env_u16 n);
-
-static double n_pow10(env_u16 n);
-
-static double n_pow16(env_u16 n);
-
-env_i32 _env_atoi32(char* a, env_i64 digits) 
-{
-    char m = 0;
-    if (digits>1&&*(a+1) == 'o') {
-        m = 1;
-        a+=2;
-        digits-=2;
-    }
-    else if (digits>1&&*(a+1) == 'x') {
-        m = 2;
-        a+=2;
-        digits-=2;
-    }
-    env_i32 n = 0;
-    env_i8 i;
-    for (i=0; i<digits ;++i) {
-        double f;
-        env_i8 v;
-        switch (m) {
-        case 0:
-            f = n_pow10(digits-i-1);
-            v = (a[i]-48);
-            break;
-        case 1:
-            f = n_pow8(digits-i-1);
-            v = (a[i]-48);
-            break;
-        case 2:
-            f = n_pow16(digits-i-1);
-            // hex is a special case.
-           
-            if (a[i]>='a') {
-                v = 10 + a[i]-'a';
-            }
-            else if (a[i]>='A') {
-                v = 10 + a[i]-'A';
-            } else {
-                v = (a[i]-48);
-            }
-            break;
-        }
-        n += v * f;
-    }
-    return n;
-}
-
-env_i64 _env_atoi64(a, digits) 
-char *a;
-env_i64 digits;
-{
-    char m = 0;
-    if (digits>1&&*(a+1) == 'o') {
-        m = 1;
-        a+=2;
-        digits-=2;
-    }
-    else if (digits>1&&*(a+1) == 'x') {
-        m = 2;
-        a+=2;
-        digits-=2;
-    }
-    env_i64 n = 0;
-    env_i8 i;
-    for (i=0; i<digits ;++i) {
-        double f;
-        env_i8 v;
-        switch (m) {
-        case 0:
-            f = n_pow10(digits-i-1);
-            v = (a[i]-48);
-            break;
-        case 1:
-            f = n_pow8(digits-i-1);
-            v = (a[i]-48);
-            break;
-        case 2:
-            f = n_pow16(digits-i-1);
-            // hex is a special case.
-            v = (a[i]-48);
-            if (v>'a') {
-                v = 10 + v-'a';
-            }
-            break;
-        }
-        n += v * f;
-    }
-    return n;
-}
-
-env_f32 _env_atof32(a, len) 
-char *a;
-env_i64 len;
-{
-    env_i8 i;
-    // get . indx
-    env_i8 dt_i = 0;
-    for (i=0; i<len ;++i) {
-        if (a[i]=='.') {
-            dt_i = i;
-            break;
-        }
-    }
-
-    env_f32 f = 0;
-    for (i=0; i<len ;++i) {
-        if (i<dt_i) {
-            double p = n_pow10(dt_i-i-1);
-            f += (a[i]-48) * p;
-        }
-        else if (i>dt_i) {
-            double p = n_pow10(i-dt_i);
-            f += (a[i]-48) / p;
-        }
-    }
-    return f;
-}
-
-env_f64 _env_atof64(a, len) 
-char *a;
-env_i64 len;
-{
-    env_i16 i;
-    // get . indx
-    env_i16 dt_i = 0;
-    for (i=0; i<len ;++i) {
-        if (a[i]=='.') {
-            dt_i = i;
-            break;
-        }
-    }
-
-    env_f64 f = 0;
-    for (i=0; i<len ;++i) {
-        if (i<dt_i) {
-            double p = n_pow10(dt_i-i-1);
-            f += (a[i]-48) * p;
-        }
-        else if (i>dt_i) {
-            double p = n_pow10(i-dt_i);
-            f += (a[i]-48) / p;
-        }
-    }
-    return f;
-}
-
-ENV_RESULT ENV_CHECK_VALIDITY(data, data_len, offending_line_buffer, offending_line_buffer_size)
-    const env_i8*   data;
-    env_size_t      data_len;
-    env_i32*        offending_line_buffer;
-    env_i32         offending_line_buffer_size;
-{
-    env_i64 offending_line_count=0;
-    env_i64 offending_line_buffer_max_count = offending_line_buffer_size/sizeof(env_i32);
-
-    env_i32* offending_line_buffer_end = offending_line_buffer + offending_line_buffer_size;
-
-    env_i32 i;
-    for (i=0; i<offending_line_buffer_max_count; ++i) {
-        offending_line_buffer[i]=-1;
-    }
-
-    const env_i8* data_end = data + data_len;
-    
-    const env_i8* key = NULL;
-    env_i16 keyLength = 0;
-
-    const env_i8* value = NULL;
-    env_i64 valueLength = 0;
-
-    env_i8 state = 0; // state 0: key
-                      // state 1: transient
-                      // state 2: value
-
-    env_i32 line = 1;
-    env_i32 last_offending_line = -1;
-
-    env_i32 negativeSignCount;
-
-    for (; data<data_end; ++data)
-    {
-        if (*data == '\n' || data == data_end-1) {
-            line++;
-            valueLength = 0;
-            state = 0;
-        }
-        else if (state == 0) {
-            if (*data==':') {
-                state = 1;
-            } 
-            else if (!_env_is_space_c_entry(*data)) {
-                if (keyLength==0) {
-                    key = data;
-                }
-                // check key validity
-                if (!((*data<='Z' && *data>='a')||(*data<='z' && *data>='a')||(*data <= '9' && *data >= '0')||*data=='_')) {
-                    if (offending_line_buffer_max_count && last_offending_line != line && offending_line_count <= offending_line_buffer_max_count-1) {
-                        offending_line_buffer[offending_line_count] = line;
-                        offending_line_count++;
-                        last_offending_line=line;
-                    }
-                } 
-                
-                keyLength++;
-            }
-        } else if (state==1) {
-            if (!_env_is_space_c_entry(*data)) {
-                state = 2;
-                value = data;
-            }
-        } else {
-            valueLength++;
-        }
-    }
-
-    offending_line_buffer[offending_line_count] = -1;
-
-    if (offending_line_count>0) {
-        return ENV_ERR_INVALID;
-    }
-    return ENV_SUCCESS;
-}
-
-
-env_i8 ENV_SIZEOF_NODE(const void* node)
-{
-    env_i8 tbl[] = {
-        0,
-        sizeof(ENV_NODE_I32),
-        sizeof(ENV_NODE_I64),
-        sizeof(ENV_NODE_F32),
-        sizeof(ENV_NODE_F64),
-        sizeof(ENV_NODE_STRING)
-    };
-
-    env_i8 t = *(env_i8*)node;
-    return tbl[t];
-}
-
-__attribute__((ms_abi))
-extern int _env_parse_arm64();
-
-ENV_RESULT ENV_PARSE(data, data_len, length_used, node_buffer)
-    const env_i8*   data; 
-    env_size_t      data_len; 
-    env_size_t*     length_used;
-    env_i8*         node_buffer;
-{
-    ENV_RESULT res = _env_parse_arm64(data, data_len, length_used, node_buffer);
-    return res;
-}
+#include "llvl_var.89.h"
 
 /* returns pow(8,n) from a direct lookup table*/
-static double n_pow8(env_u16 n) {
+double n_pow8d(var_u16 n) {
     static const double pow8_table[] = {
         1.0,
         8.0,
@@ -585,8 +331,8 @@ static double n_pow8(env_u16 n) {
 
 
 /* returns pow(16,n) from a direct lookup table*/
-static double n_pow16(env_u16 n) {
-    static const pow16_table[] = {
+double n_pow16d(var_u16 n) {
+    static const double pow16_table[] = {
         1.0,
         16.0,
         256.0,
@@ -852,7 +598,7 @@ static double n_pow16(env_u16 n) {
 }
 
 /* returns pow(10,n) from a direct lookup table*/
-static double n_pow10(env_u16 n) {
+double n_pow10d(var_u16 n) {
     static const double pow10_table[] = {
         1.0,
         10.0,
@@ -1174,3 +920,97 @@ static double n_pow10(env_u16 n) {
     #endif
     return pow10_table[n];
 }
+
+
+
+/* returns pow(8,n) from a direct lookup table*/
+var_i64 n_pow8(var_u16 n) {
+    static const var_i64 pow8_table[] = {
+        1,
+        8,
+        64,
+        512,
+        4096,
+        32768,
+        262144,
+        2097152,
+        16777216,
+        134217728,
+        1073741824,
+        8589934592,
+        68719476736,
+        549755813888,
+        4398046511104,
+        35184372088832,
+        281474976710656,
+        2251799813685248,
+        18014398509481984,
+        144115188075855872,
+        1152921504606846976,
+    };
+   
+    if (n>=sizeof(pow8_table)/(pow8_table[0])) {
+        return pow8_table[sizeof(pow8_table)/(pow8_table[0]) - 1];
+    }
+    return pow8_table[n];
+}
+
+
+/* returns pow(16,n) from a direct lookup table*/
+var_i64 n_pow16(var_u16 n) {
+    static const var_i64 pow16_table[] = {
+        1,
+        16,
+        256,
+        4096,
+        65536,
+        1048576,
+        16777216,
+        268435456,
+        4294967296,
+        68719476736,
+        1099511627776,
+        17592186044416,
+        281474976710656,
+        4503599627370496,
+        72057594037927936,
+        1152921504606846976
+    };
+    if (n>=sizeof(pow16_table)/(pow16_table[0])) {
+        return pow16_table[sizeof(pow16_table)/(pow16_table[0]) - 1];
+    }
+    return pow16_table[n];
+}
+
+/* returns pow(10,n) from a direct lookup table*/
+var_i64 n_pow10(var_u16 n) {
+    static const var_i64 pow10_table[] = {
+        1,
+        10,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000,
+        100000000,
+        1000000000,
+        10000000000,
+        100000000000,
+        1000000000000,
+        10000000000000,
+        100000000000000,
+        1000000000000000,
+        10000000000000000,
+        100000000000000000,
+        1000000000000000000,
+    };
+
+
+    if (n>=sizeof(pow10_table)/(pow10_table[0])) {
+        return pow10_table[sizeof(pow10_table)/(pow10_table[0]) - 1];
+    }
+    return pow10_table[n];
+}
+
+#endif
