@@ -3,6 +3,7 @@
 #include <stdint.h>
 #ifndef NDEBUG
 #include <stdio.h>
+#include <string.h>
 #endif
 
 
@@ -306,6 +307,91 @@ var_i8 VAR_SIZEOF_NODE(const void* node)
     var_i8 t = *(var_i8*)node;
     return tbl[t];
 }
+
+
+VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *string_buffer, var_i64 *string_size, char null_terminate)
+{
+    const void* structure_buffer_end = (char*)structure + structure_size;
+    if (!string_buffer) {
+        while (structure < structure_buffer_end)
+        {
+            VAR_NODE_BASE* as_base = structure;
+            if (as_base->type == VAR_NODE_TYPE_STRING) {
+                VAR_NODE_STRING* as_str = (VAR_NODE_STRING*)structure;
+                (*string_size) += as_str->valueLength;
+                (*string_size) += as_str->nameLength;
+                if (null_terminate) {
+                    (*string_size)++;
+                }
+            }
+            else if (as_base->type == VAR_NODE_TYPE_I32 || as_base->type == VAR_NODE_TYPE_F32) {
+                VAR_NODE_I32* as_i32 = (VAR_NODE_I32*)as_base;
+                (*string_size) += as_i32->nameLength;
+            }
+            else if (as_base->type == VAR_NODE_TYPE_I64 || as_base->type == VAR_NODE_TYPE_F64) {
+                VAR_NODE_F64* as_i64 = (VAR_NODE_F64*)as_base;
+                (*string_size) += as_i64->nameLength;
+            }
+
+            structure = (char*)structure + VAR_SIZEOF_NODE(structure);    
+        }
+        
+        
+    } else {
+        while (structure < structure_buffer_end)
+        {
+            VAR_NODE_BASE* as_base = structure;
+            if (as_base->type == VAR_NODE_TYPE_STRING) {
+                VAR_NODE_STRING* as_str = (VAR_NODE_STRING*)structure;
+                memcpy(string_buffer, as_str->value, as_str->valueLength);
+                as_str->value = string_buffer;
+                string_buffer = (char*)string_buffer + as_str->valueLength;
+                if (null_terminate) {
+                    *((char*)string_buffer) = '\0';
+                    string_buffer = (char*) string_buffer + 1;
+                }
+
+                memcpy(string_buffer, as_str->name, as_str->nameLength);
+                as_str->name = string_buffer;
+                string_buffer = (char*)string_buffer + as_str->nameLength;
+                if (null_terminate) {
+                    *((char*)string_buffer) = '\0';
+                    string_buffer = (char*) string_buffer + 1;
+                }
+            }
+            else if (as_base->type == VAR_NODE_TYPE_I32 || as_base->type == VAR_NODE_TYPE_F32) {
+                VAR_NODE_I32* as_i32 = (VAR_NODE_I32*)as_base;
+                
+                memcpy(string_buffer, as_i32->name, as_i32->nameLength);
+                as_i32->name = string_buffer;
+                string_buffer = (char*)string_buffer + as_i32->nameLength;
+                if (null_terminate) {
+                    *((char*)string_buffer) = '\0';
+                    string_buffer = (char*) string_buffer + 1;
+                }
+            }
+            else if (as_base->type == VAR_NODE_TYPE_I64 || as_base->type == VAR_NODE_TYPE_F64) {
+                VAR_NODE_F64* as_i64 = (VAR_NODE_F64*)as_base;
+
+                memcpy(string_buffer, as_i64->name, as_i64->nameLength);
+                as_i64->name = string_buffer;
+                string_buffer = (char*)string_buffer + as_i64->nameLength;
+                if (null_terminate) {
+                    *((char*)string_buffer) = '\0';
+                    string_buffer = (char*) string_buffer + 1;
+                }
+            }
+            structure = (char*)structure + VAR_SIZEOF_NODE(structure);
+        }
+    }
+    return VAR_SUCCESS;
+}
+
+
+
+
+
+
 
 __attribute__((ms_abi))
 extern int _var_parse_arm64();

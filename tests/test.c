@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "test_common.h"
-#define VAR_FILE "edge_cases.varlist"
+#define VAR_FILE "example.varlist"
 
 
 
@@ -71,13 +71,13 @@ int main(argc, argv)
         printf("Successfully parsed .env file: %s", VAR_FILE);
 
         var_size_t string_size=0;
-        result = VAR_STORE_STRINGS(structure_buffer, structure_size, NULL, &string_size, false);
+        VAR_STORE_STRINGS(structure_buffer, structure_size, NULL, &string_size, 0);
 
-        var_i8 str_buffer[string_size];
-        result = VAR_STORE_STRINGS(structure_buffer, structure_size, str_buffer, &string_size, false);
+        char str_buffer[string_size];
 
-
-
+        if (string_size>0) {
+            VAR_STORE_STRINGS(structure_buffer, structure_size, str_buffer, 0, 0);
+        }
 
         print_nodes((VAR_NODE_BASE*)structure_buffer,structure_buffer+structure_size);
     } 
@@ -89,8 +89,8 @@ int main(argc, argv)
 
 
 
-
-
-
+    fclose(fptr);
+    fptr=NULL;
+    
     return 0;
 }

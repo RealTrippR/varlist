@@ -79,5 +79,7 @@ VAR_RESULT VAR_CHECK_VALIDITY(const var_i8* data, var_size_t data_len, var_i32* 
 
 VAR_RESULT VAR_PARSE(const var_i8* data, var_size_t data_len, var_size_t* length_used, var_i8* node_buffer);
 
+VAR_RESULT VAR_STORE_STRINGS(void *structure_buffer, var_size_t structure_size, void *string_buffer, var_i64 *string_size, char null_terminate);
+
 var_i8 VAR_SIZEOF_NODE(const void* node);
 #endif
