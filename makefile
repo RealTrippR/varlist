@@ -1,6 +1,6 @@
 DEBUG_FLAGS := -g
 
-GEN_FLAGS := -O0 -std=c99 -march=core2 -Werror=int-conversion -Werror=pointer-arith  -Werror=implicit-function-declaration -Werror=incompatible-pointer-types -Werror=return-type
+GEN_FLAGS := -O0 -std=c89 -march=core2 -Werror=int-conversion -Werror=pointer-arith  -Werror=implicit-function-declaration -Werror=incompatible-pointer-types -Werror=return-type
 
 BUILD_DIR := ./build
 LLVL_BIN := $(BUILD_DIR)/llvl_var.o

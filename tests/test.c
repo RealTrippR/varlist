@@ -30,12 +30,13 @@ int main(argc, argv)
     var_size_t structure_size = 0;
 
 
-    printf("ENV_CHECK_VALIDITY MUST ALSO ENSURE THAT NO MORE THAN 300 DIGITS ARE PRESENT IN A NUMBER.\n");
-    
+    printf("VAR_CHECK_VALIDITY MUST ALSO ENSURE THAT NO MORE THAN 300 DIGITS ARE PRESENT IN A NUMBER.\n");
+    printf("ADD LICENSE TO SOURCE FILES!.\n");
+
     var_i32 offendingLines[256];
     VAR_RESULT result = VAR_CHECK_VALIDITY(fcontents, flen, offendingLines, sizeof(offendingLines));
      if (result<0) {
-        printf(".env structure is invalid.\n");
+        printf(".varlist structure is invalid.\n");
 
         printf("offending lines:\n");
         var_i32 i;
@@ -54,7 +55,7 @@ int main(argc, argv)
 
     result = VAR_PARSE(fcontents, flen, &structure_size, NULL);
     if (result<0) {
-        printf("Failed to parse .env file: %s\n", VAR_FILE);
+        printf("Failed to parse .varlist file: %s\n", VAR_FILE);
         return -2;
     }
 
@@ -64,11 +65,11 @@ int main(argc, argv)
         result = VAR_PARSE(fcontents, flen, &structure_size, structure_buffer);
 
         if (result<0) {
-            printf("Failed to parse .env file: %s\n", VAR_FILE);
+            printf("Failed to parse .varlist file: %s\n", VAR_FILE);
             return -2;
         }
         
-        printf("Successfully parsed .env file: %s", VAR_FILE);
+        printf("Successfully parsed .varlist file: %s", VAR_FILE);
 
                 print_nodes((VAR_NODE_BASE*)structure_buffer,structure_buffer+structure_size);
 
@@ -83,7 +84,7 @@ int main(argc, argv)
 
     } 
     else {
-        printf(".env file is empty.\n");
+        printf(".varlist file is empty.\n");
     }
 
 
