@@ -3,5 +3,5 @@
 forced_str<str> : 128
 forced_i64<i64> : 256
 
-forced_f32<f32> : 64
+forced_f32 <f32> : 64
 forced_f64<f64> : 512

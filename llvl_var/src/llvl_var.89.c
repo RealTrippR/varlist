@@ -1,3 +1,30 @@
+/*
+Robins Free of Charge & Open Source Public License 25
+
+Copyright (C), 2025 - Tripp R. All rights reserved.
+
+Permission for this software, the "software" being source code, binaries, and documentation,
+shall hereby be granted, free of charge, to be used for any purpose, including commercial applications,
+modification, merging, and redistrubution. The software is provided 'as-is' and comes without any
+express or implied warranty. This license is valid under the following restrictions:
+
+1. The origin of the software must not be misrepresentented; the true author(s) of the software
+must be attributed as such. This applies every alteration of the "software", the name(s)
+of the authors(s) of any alterations must be appended to the list of names of
+the author(s) of the version of the preceding software which the alteration is based upon.
+
+2. This license must be included in all redistributions of the software source.
+
+3. All distributions of altered forms of the software must be clearly marked as such.
+
+4. The author(s) of this software and all subsequent alterations hold no responsibility for any
+damages that may result from use of the software.
+
+5. The software shall not be used for the purpose of training LLMs ("Large Language Models"),
+be included in datasets used for the purpose of training AI, or be used in the advancement of any
+form of Artificial Intelligence.
+*/
+
 #include "../llvl_var.89.h"
 #include "../pow_lookup.89.h"
 #include <stdint.h>
@@ -8,8 +35,16 @@
 #endif
 
 
+#if defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
 extern char _var_is_space_c_entry(char);
-
+#else
+static char var_is_space(char c) {
+    if (c==32 || c==13 ||c==10||c==9||c==12) {
+        return 1;
+    }
+    return 0;
+}
+#endif
 
 var_i32 _var_atoi32(char* a, var_i64 digits) 
 {
@@ -20,7 +55,7 @@ var_i32 _var_atoi32(char* a, var_i64 digits)
         digits--;
         neg = 1;
     }
-    else if (digits>1&&*(a+1) == 'o') {
+    if (digits>1&&*(a+1) == 'o') {
         m = 1;
         a+=2;
         digits-=2;
@@ -77,7 +112,7 @@ var_i64 digits;
         digits--;
         neg = 1;
     }
-    else if (digits>1&&*(a+1) == 'o') {
+    if (digits>1&&*(a+1) == 'o') {
         m = 1;
         a+=2;
         digits-=2;
@@ -298,7 +333,7 @@ VAR_RESULT VAR_CHECK_VALIDITY(data, data_len, offending_line_buffer, offending_l
                 if (*data==':') {
                     state = 1;
                 } 
-                else if (!_var_is_space_c_entry(*data)) {
+                else if (!var_is_space(*data)) {
                     if (keyLength==0) {
                         key = data;
                     }
@@ -322,7 +357,7 @@ VAR_RESULT VAR_CHECK_VALIDITY(data, data_len, offending_line_buffer, offending_l
                     }
                 }
             } else if (state==1) {
-                if (!_var_is_space_c_entry(*data)) {
+                if (!var_is_space(*data)) {
                     state = 2;
                     value = data;
                 }
@@ -454,12 +489,352 @@ __attribute__((ms_abi))
 #endif
 extern int _var_parse_arm64();
 
+#if !defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
+    static int var_parse();
+
+    static int finalize_pair(uint8_t* key_begin, uint16_t key, uint8_t* val, uint64_t val_len, char forced_type, var_i8* node_buffer);
+    
+#endif
+
 VAR_RESULT VAR_PARSE(data, data_len, length_used, node_buffer)
     const var_i8*   data; 
     var_size_t      data_len; 
     var_size_t*     length_used;
     var_i8*         node_buffer;
 {
+
+    #if defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
     VAR_RESULT res = _var_parse_arm64(data, data_len, length_used, node_buffer);
+    #else
+    VAR_RESULT res = var_parse(data,data_len,length_used,node_buffer);
+    #endif
+
     return res;
+}
+
+
+static int var_parse(data, data_len, length_used, node_buffer) 
+    const var_i8*   data; 
+    var_size_t      data_len; 
+    var_size_t*     length_used;
+    var_i8*         node_buffer;
+{
+    *length_used = 0;
+    const char* key = 0;
+    uint16_t key_len = 0;
+    
+    const char* value = 0;
+    size_t value_len = 0;
+
+    char state = 0; // 0: key
+                    // 1: transient
+                    // 2: value
+
+    char forced_type_state = 0; // 0: not forced
+                                // 1: i64 
+                                // 2: i32
+                                // 3: f64
+                                // 4: f32
+                                // 5: str
+    const var_i8* cur = data;
+    const var_i8* data_end = data + data_len;
+    while (cur <= data_end)
+    {
+        if (*cur == '\r' || *cur == '\n' || cur == data_end) {
+
+            if (state == 2 && key_len > 0 && value_len > 0) {
+                int n = finalize_pair(key, key_len, value, value_len, forced_type_state, node_buffer);;
+                *length_used += n;
+                if (node_buffer) {
+                    node_buffer+=n;
+                }
+            }
+
+            state=0;
+            forced_type_state = 0;
+            key = 0;
+            key_len = 0;
+            value = 0;
+            value_len = 0;
+        }
+        else {
+            if (state == 0) {
+                char is_space = var_is_space(*cur);
+                if (!key && !is_space && *cur!=':') {
+                    key = cur;
+                }
+                if (*cur == ':' || *cur == '<') {
+                    state = 1;
+                } else if (!is_space) {
+                    key_len++;
+                }
+            }
+            if (state == 1) {
+                if (*cur == '<') {
+                    cur++;
+                    if (cur[0] == 's') {
+                        forced_type_state = 5;
+                    } else
+                    if (cur[0] == 'i'){
+                        if (cur[2] == '2') {
+                            forced_type_state = 2;
+                        } else {
+                            forced_type_state = 1;
+                        }
+                    } else {
+                        if (cur[2] == '2') {
+                            forced_type_state = 4;
+                        } else {
+                            forced_type_state = 3;
+                        }
+                    }
+                    cur+=4;
+                } 
+                else if (!var_is_space(*cur) && *cur!=':') {
+                    value = cur;
+                    state = 2;
+                    value_len++;
+                }
+            }
+            else if (state == 2) {
+                value_len++;
+            }
+        }
+
+        cur++;
+    }
+
+    return VAR_SUCCESS;
+}
+
+
+
+
+// return values:
+// 0: not numeric
+// 1: decimal
+// 2: float
+// 'o': octal
+// 'x': hex
+static char is_numeric(uint8_t* val, uint64_t val_len)
+{
+    if (*val == '-') {
+        val++;
+        val_len--;
+    }
+
+    if (val_len > 1) {
+        if (val[0] == '0' && val[1] == 'x') {
+            return 'x';
+        } else
+        if (val[0] == '0' && val[1] == 'o') {
+            return 'o';
+        }
+    }
+
+
+    char f = 0;
+    char has_period = 0;
+    uint8_t* val_end = val + val_len;
+    while (val < val_end)
+    {
+          if (*val == '.') {
+            if (has_period) {
+                return 0;
+            }
+            has_period = 1;
+            f = 1;
+        } else
+        if (*val < '0' || *val > '9') {
+            return 0;
+        }
+      
+        val++;
+    }
+    return f+1;
+}
+
+static int finalize_pair(key, key_len, val, val_len, type_state, node_buffer)
+    uint8_t* key;
+    uint16_t key_len;
+    uint8_t* val;
+    uint64_t val_len;
+    char     type_state;
+    var_i8*  node_buffer;
+{
+    if (type_state == 0) {
+        // deduce type
+        char type = is_numeric(val,val_len);
+        char is_32 = 1;
+        if (type==0) {
+            goto as_str;
+        } else
+        if (type==1) { // int
+            var_i64 nlen = val_len;
+            var_i8* n = val;
+            if (val[0] == '-') {
+                nlen--;
+                n++;
+            }
+
+            // compare to i32 max (ASCII)
+            var_i8* cmp_to = "2147483647";
+            if (nlen < strlen(cmp_to)) {
+                goto as_i32;
+            } else if (nlen > strlen(cmp_to)) {
+                goto as_i64;
+            }
+
+            var_i8* cur = n+nlen-1;
+            var_i8* cmp = cmp_to + strlen(cmp_to)-1;
+            for (; cur >= n; cur--) {
+                if (*cur < *cmp) {
+                    goto as_i32;
+                }
+                if (*cur > *cmp) {
+                    goto as_i64;
+                }
+                if (cmp == cmp_to){
+                    break;
+                }
+                cmp--;
+            }
+            goto as_i32; // equal
+        } else
+        if (type==2) { // float
+            if (val_len < 10) {
+                goto as_f32;
+            }
+             goto as_f64;
+        } else
+        if (type=='o') {
+            // compare to i32 max (as octal)
+            var_i64 nlen = val_len-2;
+            var_i8* n = val+2;
+            if (val[0] == '-') {
+                nlen--;
+                n++;
+            }
+
+            // compare to i32 max
+            var_i8* cmp_to = "17777777777";
+            if (nlen < strlen(cmp_to)) {
+                goto as_i32;
+            } else if (nlen > strlen(cmp_to)) {
+                goto as_i64;
+            }
+
+            var_i8* cur = n+nlen-1;
+            var_i8* cmp = cmp_to + strlen(cmp_to)-1;
+            for (; cur >= n; cur--) {
+                if (*cur < *cmp) {
+                    goto as_i32;
+                }
+                if (*cur > *cmp) {
+                    goto as_i64;
+                }
+                if (cmp == cmp_to){
+                    break;
+                }
+                cmp--;
+            }
+            goto as_i32; // equal
+        } else
+        if (type=='x') {
+            // compare to i32 max (as hex)
+
+            var_i64 nlen = val_len-2;
+            var_i8* n = val+2;
+            if (val[0] == '-') {
+                nlen--;
+                n++;
+            }
+
+            // compare to i32 max
+            var_i8* cmp_to = "7FFFFFFF";
+            if (nlen < strlen(cmp_to)) {
+                goto as_i32;
+            } else if (nlen > strlen(cmp_to)) {
+                goto as_i64;
+            }
+
+            var_i8* cur = n+nlen-1;
+            var_i8* cmp = cmp_to + strlen(cmp_to)-1;
+            for (; cur >= n; cur--) {
+                if (*cur < *cmp) {
+                    goto as_i32;
+                }
+                if (*cur > *cmp) {
+                    goto as_i64;
+                }
+                if (cmp == cmp_to){
+                    break;
+                }
+                cmp--;
+            }
+            goto as_i32; // equal
+        }     
+    }
+    else if (type_state == 1) {
+as_i64:
+        // i64
+        if (node_buffer) {
+            VAR_NODE_I64* s = (VAR_NODE_I64*)node_buffer;
+            s->name = key;
+            s->nameLength = key_len;
+            s->type = VAR_NODE_TYPE_I64;
+            s->value = _var_atoi64(val, val_len);
+        }
+        return sizeof(VAR_NODE_I64);
+    }
+    else if (type_state == 2) {
+as_i32:
+        // i32
+        if (node_buffer) {
+            VAR_NODE_I32* s = (VAR_NODE_I32*)node_buffer;
+            s->name = key;
+            s->nameLength = key_len;
+            s->type = VAR_NODE_TYPE_I32;
+            s->value = _var_atoi32(val, val_len);
+        }
+        return sizeof(VAR_NODE_I32);
+    }
+    else if (type_state == 3) {
+as_f64:
+        // f64
+        if (node_buffer) {
+            VAR_NODE_F64* s = (VAR_NODE_F64*)node_buffer;
+            s->name = key;
+            s->nameLength = key_len;
+            s->type = VAR_NODE_TYPE_F64;
+            s->value = _var_atof64(val, val_len);
+        }
+        return sizeof(VAR_NODE_F64);
+    }
+    else if (type_state == 4) {
+as_f32:
+        // f32
+        if (node_buffer) {
+            VAR_NODE_F32* s = (VAR_NODE_F32*)node_buffer;
+            s->name = key;
+            s->nameLength = key_len;
+            s->type = VAR_NODE_TYPE_F32;
+            s->value = _var_atof32(val, val_len);
+        }
+        return sizeof(VAR_NODE_F32);
+    }
+    else if (type_state == 5) {
+as_str:
+        // str
+        if (node_buffer) {
+            VAR_NODE_STRING* s = (VAR_NODE_STRING*)node_buffer;
+            s->name = key;
+            s->nameLength = key_len;
+            s->type = VAR_NODE_TYPE_STRING;
+            s->value = val;
+            s->valueLength = val_len;
+        }
+        return sizeof(VAR_NODE_STRING);
+    }
+    return 0;
 }

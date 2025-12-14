@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "test_common.h"
-#define VAR_FILE "forced.varlist"
+#define VAR_FILE "edge_cases.varlist"
 
 
 

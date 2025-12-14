@@ -1,0 +1,80 @@
+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+VARLIST SPECIFICATION
+
+V2025.12
+
+COPYRIGHT (C) TRIPP R.
+
+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+Variable syntax:
+    Variables are defined as so, with the name and value seperated by a colon. 
+    There can be an arbitrary number of spaces between the end of the name, seperator, and beginning of the value.
+    The entire variable must only be defined on a single line.
+
+    {name} : {value}
+
+    A variable name should contain no spaces and only the ASCII characters 'a-z', 'A-Z', '0-9', and '_'
+    A variable is considered a value of integer type if it is a integer literal, hex literal, or octal literal.
+    Hex literals begin with the code '0x' and octals with '0o'. The literal codes are case sensitive.
+    Hex literals may contain the values '0-9' and 'A-F'. Lower case characters in hex values are not permitted by the standard.
+    A literal that begins with a hex code and does not contain valid hex values is invalid.
+    Octal literals may contain the values '0-7'.
+    A literal that begins with an octal code and does not contain valid octal values is invalid.
+
+    For example:
+        Int literal:
+            my_int : 15
+        Hex literal:
+            my_hex: 0xD5
+        Octal literal:
+            my_octal: 0o7
+
+    If a literal that begins with the octal or hex code contains invalid characters, it must still be treated
+    as a numeric value unless it's forced to a different type.
+
+    A variable is consider a value of floating point type if it is comprised only of digits '0-9' and a single period.
+    For example:
+        my_float: 3.14159
+
+    Any value that does not meet these requirements should be 
+
+
+Variable type overrides:
+    The type of variables can be overridden using type specifiers.
+    Type override specifiers must come after the name of the value and before the seperator.
+    There can be an arbitrary number of spaces between the end of the name, the beginning of the type '<' and between the end of the type '>' and the seperator.
+    There cannot be any spaces within the value markers '<' and '>.
+
+    {name} <type> : {value}
+
+    There are 5 type specifiers defined by the specification:
+
+    <str> - ASCII string value
+    <i32> - 32-bit integer value
+    <i64> - 64-bit integer value
+    <f32> - 32-bit floating point value
+    <f64> - 64-bit floating point value
+
+    For example:
+    forced_str<str> : 128
+
+
+Version declaration:
+    Varlist files may begin with an optional #VARLIST keyword followed by the version as an ASCII string on the same line.
+    The version is the year of the Gregorian calendar followed by the month (0-12) of the release date 
+    of the specification of the given varlist.
+
+    For example:
+    #VARLIST 2025.12
+
+
+Handling invalid variables:
+    
+    To avoid parser errors, all parses must implement a function to check the validity of a
+    varlist file.
+
+Definitions:
+    cmp al, 13 ; CARRIAGE RETURN
+    a 'space' is considered to be any byte in a .varlist source file with a decimal value of 9, 11, 12, or 32.
