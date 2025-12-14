@@ -34,6 +34,13 @@ form of Artificial Intelligence.
 #include <string.h>
 #endif
 
+#if defined(__GNUC__) || defined(_WIN64)
+    #if defined(__x86_64__) || defined(_M_X64)
+        #define C_VAR_IS_ASM___WIN_OR_GCC_x64
+    #endif
+#endif
+
+
 
 #if defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
 extern char _var_is_space_c_entry(char);
