@@ -30,9 +30,6 @@ int main(argc, argv)
     var_size_t structure_size = 0;
 
 
-    printf("VAR_CHECK_VALIDITY MUST ALSO ENSURE THAT NO MORE THAN 300 DIGITS ARE PRESENT IN A NUMBER.\n");
-    printf("ADD LICENSE TO SOURCE FILES!.\n");
-
     var_i32 offendingLines[256];
     VAR_RESULT result = VAR_CHECK_VALIDITY(fcontents, flen, offendingLines, sizeof(offendingLines));
      if (result<0) {
@@ -86,10 +83,6 @@ int main(argc, argv)
     else {
         printf(".varlist file is empty.\n");
     }
-
-
-
-
 
     fclose(fptr);
     fptr=NULL;

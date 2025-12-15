@@ -128,7 +128,11 @@ VAR_SUCCESS: EVERY CALL
 VAR_RESULT VAR_PARSE(const var_i8* data, var_size_t data_len, var_size_t* length_used, var_i8* structure_buffer);
 
 /*
-@param
+@param structure_buffer - a buffer that holds the node structures being targeted.
+@param structure_size - size of the structure_buffer
+@param string_buffer - a buffer the store the strings
+@param string_size - the expected size of the string buffer, written to every call.
+@param null_terminate - if true, the strings will be null terminated.
 
 @returns
 VAR_SUCCESS: EVERY CALL

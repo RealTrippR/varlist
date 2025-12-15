@@ -30,7 +30,6 @@ form of Artificial Intelligence.
 #include <stdint.h>
 #include "../deps/streql/streqlasm.h"
 #ifndef NDEBUG
-#include <stdio.h>
 #include <string.h>
 #endif
 
@@ -44,6 +43,9 @@ form of Artificial Intelligence.
 
 #if defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
 extern char _var_is_space_c_entry(char);
+static char var_is_space(char c) {
+    return _var_is_space_c_entry(c);
+}
 #else
 static char var_is_space(char c) {
     if (c==32 || c==13 ||c==10||c==9||c==12) {
@@ -519,6 +521,7 @@ VAR_RESULT VAR_PARSE(data, data_len, length_used, node_buffer)
     return res;
 }
 
+#if !defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
 
 static int var_parse(data, data_len, length_used, node_buffer) 
     const var_i8*   data; 
@@ -616,7 +619,6 @@ static int var_parse(data, data_len, length_used, node_buffer)
 
 
 
-
 // return values:
 // 0: not numeric
 // 1: decimal
@@ -660,6 +662,7 @@ static char is_numeric(uint8_t* val, uint64_t val_len)
     }
     return f+1;
 }
+
 
 static int finalize_pair(key, key_len, val, val_len, type_state, node_buffer)
     uint8_t* key;
@@ -845,3 +848,5 @@ as_str:
     }
     return 0;
 }
+
+#endif

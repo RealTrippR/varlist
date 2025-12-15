@@ -28,10 +28,10 @@ section .data
     ; abs limits
     i32_limit_a_len dq  10
     i32_limit_a db "2147483647"
-    i32_limit_h_len dq  8
-    i32_limit_h db "7FFFFFFF"
-    i32_limit_o_len dq  11
-    i32_limit_o db "17777777777"
+    i32_limit_h_len dq  10
+    i32_limit_h db "0x7FFFFFFF"
+    i32_limit_o_len dq  13
+    i32_limit_o db "0o17777777777"
 
 section .text
 
@@ -50,7 +50,7 @@ _var_is_space_c_entry:
 
 ; CALL / RET
 ; MODIFIES R14, RAX, R11, RDX
-; EXPECTS NUMERIC TYPE TO BE IN [RSP + 96]
+; EXPECTS NUMERIC TYPE TO BE IN [RSP + 96 + 8]
 ; EXPECTS R11 TO HOLD ASCII LEN
 ; EXPECTS R14 TO HOLD ASCII BEGIN
 ; RETURNS 1 IN AL IF ABS OF VALUE EXCEEDS I32 LIMIT
@@ -59,15 +59,15 @@ _exceeds_i32_limit:
     inc rax
     mov rdx, R11
     dec rdx
-    cmp byte [r14], '-'
+    cmp byte [r14], '-' ; skip '-'
     cmove r14, rax
     cmove r11, rdx
 
-
-    cmp byte [RSP + 96], 'x'
+    mov rax, [rsp + 104]
+    cmp byte [rsp + 104], 'x'
     je  ._exceeds_i32_limit.as_hex
 
-    cmp byte [RSP + 96], 'o'
+    cmp byte [rsp + 104], 'o'
     je  ._exceeds_i32_limit.as_octal
 
     ; DEFAULT
@@ -240,6 +240,13 @@ _is_numeric:
     mov r10, 0
     mov r9, 0
 
+    ; check if the first char is a '-', if so, skip it
+    mov al, [rdx]
+    mov rax, rdx
+    add rax, 1
+    cmp byte [rdx], '-'
+    cmove rdx, rax ; inc rdx, non branching.
+
     ; check if it may be octal or hex
     mov al, [rdx]
     mov rax, rdx
@@ -287,8 +294,6 @@ _is_numeric:
     cmp r10, 'x'
     je .handle_hex_alpha_check
 
-    cmp al, '-'
-    je .skip_alpha_check
     
     ; check if it's alpha
     cmp al, '0'
@@ -423,9 +428,15 @@ _var_parse_arm64:
     cmp rcx, [rsp+48] ; last char
     je .handle_last_char
 
-
+    
     mov al, [rcx];
 
+    cmp al, 13 ; /r
+    je .line_break
+    cmp al, 10 ; /n
+    je .line_break
+
+.line_break.skip:
     cmp al, '<'
     je .handle_type_override
 
@@ -482,6 +493,9 @@ _var_parse_arm64:
 ; if str:
 ; [rsp+8] = 'r'
 .handle_type_override:
+    cmp r12, 2
+    je .handle_type_override.return ; ignore
+
     cmp byte [rcx+1], 'f'
     je .handle_type_override.as_float
 
@@ -503,6 +517,14 @@ _var_parse_arm64:
     inc r11
     jmp .handle_string_break
 
+.line_break:
+    cmp r12, 2
+    je .line_break.skip
+    
+    mov r11,0
+    mov r12,0
+    mov rbx,0
+    jmp ._main_itr_loop.continue
 
 .handle_space:
     cmp r12, 2
@@ -515,8 +537,8 @@ _var_parse_arm64:
     cmp r12, 2
     je ._main_itr_loop.ret_handle_colon_stage_II
     
-    cmp r12, 0
-    je .handle_string_break
+    ;cmp r12, 0
+    ;je .handle_string_break
     ; cmp r12, 1
     ; je ._main_itr_loop.continue
 
@@ -554,12 +576,12 @@ _var_parse_arm64:
 
     .if_is_string:
         ; state transitions and value finalization
-        cmp r12, 0
+        cmp r12, 1
         je .if_is_string.key_to_value
         cmp r12, 2
         je .if_is_string.finalize
 
-        ; 1
+        ; 0
         jmp ._main_itr_loop.continue
 
         .if_is_string.key_to_value:
@@ -673,7 +695,6 @@ _var_parse_arm64:
     mov [rsp+104], rdx
     mov [rsp+112], r11
     mov [rsp+120], r14
-
     call _exceeds_i32_limit
     mov rdx, [rsp+104]
     mov r11, [rsp+112]
