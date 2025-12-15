@@ -1,6 +1,6 @@
 # .varlist #
 
-the .varlist specification is straightforward, line-oriented data format similar to the .env format. All variables are key-value pairs and are either implicitly typed based on its literal form or explicitly typed via a type specifier.
+the .varlist specification is straightforward, line-oriented data format similar to .env. All variables are key-value pairs and are either implicitly typed based on its literal form or explicitly typed via a type specifier.
 
 For the exact specification details, refer to spec.txt
 
