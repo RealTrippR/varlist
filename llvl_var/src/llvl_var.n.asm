@@ -496,12 +496,14 @@ _var_parse_arm64:
     cmp r12, 2
     je .handle_type_override.return ; ignore
 
+    mov r12, 1 ; MOV TO TRANSIENT STATE
+
     cmp byte [rcx+1], 'f'
     je .handle_type_override.as_float
 
     mov rax, [rcx+3]
     mov [rsp+8], rax
-    add rcx, 5 ; inc cur ptr
+    add rcx, 4 ; inc cur ptr
     jmp .handle_type_override.return
         
 .handle_type_override.as_float:

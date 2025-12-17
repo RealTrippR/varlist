@@ -850,3 +850,107 @@ as_str:
 }
 
 #endif
+
+VAR_NODE_I32* VAR_GET_NODE_I32(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size)
+{
+    VAR_NODE_BASE* base = (VAR_NODE_BASE*)structure_buffer;
+    const void* end = structure_buffer_size + structure_buffer;
+    int namelen = strlen(name);
+    while (base)
+    {
+        if (base->type == VAR_NODE_TYPE_I32) {
+            VAR_NODE_I32* as_i32 = (VAR_NODE_I32*)base;
+            if (as_i32->nameLength == namelen && strneql(as_i32->name, name, namelen)) {
+                return as_i32;
+            }
+        }
+        base = base + VAR_SIZEOF_NODE(base);
+        if ((char*)base>=(char*)end-1)
+            break;
+    }
+    return NULL;
+}
+
+VAR_NODE_I64* VAR_GET_NODE_I64(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size)
+{
+    VAR_NODE_BASE* base = (VAR_NODE_BASE*)structure_buffer;
+    const void* end = structure_buffer_size + structure_buffer;
+    int namelen = strlen(name);
+    while (base)
+    {
+        if (base->type == VAR_NODE_TYPE_I64) {
+            VAR_NODE_I64* as_i64 = (VAR_NODE_I64*)base;
+            if (as_i64->nameLength == namelen && strneql(as_i64->name, name, namelen)) {
+                return as_i64;
+            }
+        }
+        base = base + VAR_SIZEOF_NODE(base);
+        if ((char*)base>=(char*)end-1)
+            break;
+    }
+
+    return NULL;
+}
+
+VAR_NODE_F32* VAR_GET_NODE_F32(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size)
+{
+    VAR_NODE_BASE* base = (VAR_NODE_BASE*)structure_buffer;
+    const void* end = structure_buffer_size + structure_buffer;
+    int namelen = strlen(name);
+    while (base)
+    {
+        if (base->type == VAR_NODE_TYPE_F32) {
+            VAR_NODE_F32* as_f32 = (VAR_NODE_F32*)base;
+            if (as_f32->nameLength == namelen && strneql(as_f32->name, name, namelen)) {
+                return as_f32;
+            }
+        }
+        base = base + VAR_SIZEOF_NODE(base);
+        if ((char*)base>=(char*)end-1)
+            break;
+    }
+
+    return NULL;
+}
+
+VAR_NODE_F64* VAR_GET_NODE_F64(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size)
+{
+    VAR_NODE_BASE* base = (VAR_NODE_BASE*)structure_buffer;
+    const void* end = structure_buffer_size + structure_buffer;
+    int namelen = strlen(name);
+    while (base)
+    {
+        if (base->type == VAR_NODE_TYPE_F64) {
+            VAR_NODE_F64* as_f64 = (VAR_NODE_F64*)base;
+            if (as_f64->nameLength == namelen && strneql(as_f64->name, name, namelen)) {
+                return as_f64;
+            }
+        }
+        base = base + VAR_SIZEOF_NODE(base);
+        if ((char*)base>=(char*)end-1)
+            break;
+    }
+    
+    return NULL;
+}
+
+VAR_NODE_STRING* VAR_GET_NODE_STRING(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size)
+{
+    VAR_NODE_BASE* base = (VAR_NODE_BASE*)structure_buffer;
+    const void* end = structure_buffer_size + structure_buffer;
+    int namelen = strlen(name);
+    while (base)
+    {
+        if (base->type == VAR_NODE_TYPE_STRING) {
+            VAR_NODE_STRING* as_str = (VAR_NODE_STRING*)base;
+            if (as_str->nameLength == namelen && strneql(as_str->name, name, namelen)) {
+                return as_str;
+            }
+        }
+        base = base + VAR_SIZEOF_NODE(base);
+        if ((char*)base>=(char*)end-1)
+            break;
+    }
+
+    return NULL;
+}

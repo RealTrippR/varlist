@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "test_common.h"
-#define VAR_FILE "edge_cases.varlist"
+#define VAR_FILE "forced.varlist"
 
 
 
@@ -66,7 +66,7 @@ int main(argc, argv)
             return -2;
         }
         
-        printf("Successfully parsed .varlist file: %s", VAR_FILE);
+        printf("Successfully parsed .varlist file: %s\n", VAR_FILE);
 
                 print_nodes((VAR_NODE_BASE*)structure_buffer,structure_buffer+structure_size);
 

@@ -140,4 +140,52 @@ VAR_SUCCESS: EVERY CALL
 VAR_RESULT VAR_STORE_STRINGS(void *structure_buffer, var_size_t structure_size, void *string_buffer, var_i64 *string_size, char null_terminate);
 
 var_i8 VAR_SIZEOF_NODE(const void* node);
+
+
+
+/*
+Returns the first match of the given variable that matches the name and specified type.
+@returns
+VAR_NODE_I32: A POINTER TO A NODE IF A MATCH WAS FOUND
+VAR_NODE_I32: NULL IF DOES NOT EXIST
+*/
+VAR_NODE_I32*       VAR_GET_NODE_I32(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size);
+
+/*
+Returns the first match of the given variable that matches the name and specified type.
+
+@returns
+VAR_NODE_I64: A POINTER TO A NODE IF A MATCH WAS FOUND
+VAR_NODE_I64: NULL IF DOES NOT EXIST
+*/
+VAR_NODE_I64*       VAR_GET_NODE_I64(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size);
+
+/*
+Returns the first match of the given variable that matches the name and specified type.
+
+@returns
+VAR_NODE_F32: A POINTER TO A NODE IF A MATCH WAS FOUND
+VAR_NODE_F32: NULL IF DOES NOT EXIST
+*/
+VAR_NODE_F32*       VAR_GET_NODE_F32(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size);
+
+/*
+Returns the first match of the given variable that matches the name and specified type.
+
+@returns
+VAR_NODE_F64: A POINTER TO A NODE IF A MATCH WAS FOUND
+VAR_NODE_F64: NULL IF DOES NOT EXIST
+*/
+VAR_NODE_F64*       VAR_GET_NODE_F64(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size);
+
+
+/*
+Returns the first match of the given variable that matches the name and specified type.
+
+@returns
+VAR_NODE_STRING: A POINTER TO A NODE IF A MATCH WAS FOUND
+VAR_NODE_STRING: NULL IF DOES NOT EXIST
+*/
+VAR_NODE_STRING*    VAR_GET_NODE_STRING(const char* name, const var_i8* structure_buffer, const var_size_t structure_buffer_size);
+
 #endif
