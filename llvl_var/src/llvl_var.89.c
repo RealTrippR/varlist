@@ -325,14 +325,7 @@ VAR_RESULT VAR_CHECK_VALIDITY(data, data_len, offending_line_buffer, offending_l
 
                 data=end;
             }
-        } else if (*data==':' && state!=0) {
-            state = 1;
-            if (offending_line_buffer_max_count && last_offending_line != line && offending_line_count <= offending_line_buffer_max_count-1) {
-                offending_line_buffer[offending_line_count] = line;
-                offending_line_count++;
-                last_offending_line=line;
-            }
-        }  else {
+        } else {
             if (*data == '\n' || data == data_end-1) {
                 line++;
                 valueLength = 0;
