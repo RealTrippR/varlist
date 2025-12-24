@@ -42,8 +42,8 @@ void print_nodes( VAR_NODE_BASE* base , void* end) {
         if (base->type == VAR_NODE_TYPE_STRING) {
             VAR_NODE_STRING* as_string = (VAR_NODE_STRING*)base;
             printf("\t === NODE: STRING ===\n");
-            printf("\t NAME: \"%.*s\"\n", as_string->nameLength, as_string->name);
-            printf("\t STRING: \"%.*s\"\n", as_string->valueLength, as_string->value);
+            printf("\t NAME<%d>: \"%.*s\"\n", as_string->nameLength,as_string->nameLength, as_string->name);
+            printf("\t STRING<%d>: \"%.*s\"\n", as_string->valueLength, as_string->valueLength, as_string->value);
             printf("\n");
         }
         else if (base->type == VAR_NODE_TYPE_I32) {

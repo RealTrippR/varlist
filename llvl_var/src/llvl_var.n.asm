@@ -526,6 +526,7 @@ _var_parse_arm64:
     mov r11,0
     mov r12,0
     mov rbx,0
+    mov qword [rsp+8], 0 ; reset type override
     jmp ._main_itr_loop.continue
 
 .handle_space:
