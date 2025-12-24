@@ -76,5 +76,4 @@ Handling invalid variables:
     varlist file.
 
 Definitions:
-    cmp al, 13 ; CARRIAGE RETURN
     a 'space' is considered to be any byte in a .varlist source file with a decimal value of 9, 11, 12, or 32.
