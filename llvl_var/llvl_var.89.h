@@ -95,12 +95,6 @@ typedef struct {
 } VAR_NODE_F64;
 
 
-typedef var_i8 ENV_PARSE_FLAGS;
-typedef enum {
-    VAR_PARSE_ASSUME_STRINGS = 0x1,
-    VAR_PARSE_DISALLOW_OCTAL = 0x2,
-    VAR_PARSE_DISALLOW_HEX   = 0x4
-} VAR_PARSE_FLAGS_T;
 
 /*
 @param
