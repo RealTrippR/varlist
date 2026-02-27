@@ -38,7 +38,7 @@ Variable syntax:
     For example:
         my_float: 3.14159
 
-    Any value that does not meet these requirements should be 
+    Any value that does not meet these requirements should be treated as a string.
 
 
 Variable type overrides:
