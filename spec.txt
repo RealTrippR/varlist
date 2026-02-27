@@ -45,7 +45,7 @@ Variable type overrides:
     The type of variables can be overridden using type specifiers.
     Type override specifiers must come after the name of the value and before the seperator.
     There can be an arbitrary number of spaces between the end of the name, the beginning of the type '<' and between the end of the type '>' and the seperator.
-    There cannot be any spaces within the value markers '<' and '>.
+    There cannot be any spaces within the type markers '<' and '>'.
 
     {name} <type> : {value}
 
