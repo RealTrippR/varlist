@@ -39,6 +39,7 @@ Variable syntax:
         my_float: 3.14159
 
     Any value that does not meet these requirements should be treated as a string.
+    If a line is not in the {name} : {value} format, it should be ignored as if it were a comment.
 
 
 Variable type overrides:
