@@ -38,14 +38,15 @@ Variable syntax:
     For example:
         my_float: 3.14159
 
-    Any value that does not meet these requirements should be 
+    Any value that does not meet these requirements should be treated as a string.
+    If a line is not in the {name} : {value} format, it should be ignored as if it were a comment.
 
 
 Variable type overrides:
     The type of variables can be overridden using type specifiers.
     Type override specifiers must come after the name of the value and before the seperator.
     There can be an arbitrary number of spaces between the end of the name, the beginning of the type '<' and between the end of the type '>' and the seperator.
-    There cannot be any spaces within the value markers '<' and '>.
+    There cannot be any spaces within the type markers '<' and '>'.
 
     {name} <type> : {value}
 
