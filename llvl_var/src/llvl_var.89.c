@@ -402,7 +402,7 @@ var_i8 VAR_SIZEOF_NODE(const void* node)
 }
 
 
-VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *string_buffer, var_i64 *string_size, char null_terminate)
+VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *string_buffer, var_size_t *string_size, char null_terminate)
 {
     const void* structure_buffer_end = (char*)structure + structure_size;
     if (!string_buffer) {

@@ -88,6 +88,7 @@ int main(argc, argv)
     fptr=NULL;
     
 
+    printf("\n\rPress any key to quit the program....");
     getc(stdin);
 
     return 0;

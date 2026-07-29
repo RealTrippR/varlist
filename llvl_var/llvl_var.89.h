@@ -137,7 +137,7 @@ VAR_RESULT VAR_PARSE(const var_i8* data, var_size_t data_len, var_size_t* length
 @returns
 VAR_SUCCESS: EVERY CALL
 */
-VAR_RESULT VAR_STORE_STRINGS(void *structure_buffer, var_size_t structure_size, void *string_buffer, var_i64 *string_size, char null_terminate);
+VAR_RESULT VAR_STORE_STRINGS(void *structure_buffer, var_size_t structure_size, void *string_buffer, var_size_t *string_size, char null_terminate);
 
 var_i8 VAR_SIZEOF_NODE(const void* node);
 

@@ -22,7 +22,25 @@
                 "build_llvlenv"
             ],
             "type": "shell",
-            "command": "make -B",
+            "command": "make run -B",
+            "options": {
+                "cwd": "${workspaceFolder}/tests"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "build_test_cc",
+            "dependsOn": [
+                "build_llvlenv"
+            ],
+            "type": "shell",
+            "command": "make cc -B",
             "options": {
                 "cwd": "${workspaceFolder}/tests"
             },
