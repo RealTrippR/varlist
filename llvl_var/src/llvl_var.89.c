@@ -33,12 +33,13 @@ form of Artificial Intelligence.
 #include <string.h>
 #endif
 
-#if defined(__GNUC__) || defined(_WIN64)
-    #if defined(__x86_64__) || defined(_M_X64)
-        #define C_VAR_IS_ASM___WIN_OR_GCC_x64
+#if !defined(LLVL_EXEMPT_ASM)
+    #if defined(__GNUC__) || defined(_WIN64)
+        #if defined(__x86_64__) || defined(_M_X64)
+            #define C_VAR_IS_ASM___WIN_OR_GCC_x64
+        #endif
     #endif
 #endif
-
 
 
 #if defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
@@ -494,7 +495,8 @@ extern int _var_parse_arm64();
 #if !defined(C_VAR_IS_ASM___WIN_OR_GCC_x64)
     static int var_parse();
 
-    static int finalize_pair(uint8_t* key_begin, uint16_t key, uint8_t* val, uint64_t val_len, char forced_type, var_i8* node_buffer);
+    static int finalize_pair(const uint8_t* key_begin, uint16_t key, uint8_t* val, 
+        uint64_t val_len, char forced_type, var_i8* node_buffer);
     
 #endif
 
@@ -546,7 +548,10 @@ static int var_parse(data, data_len, length_used, node_buffer)
         if (*cur == '\r' || *cur == '\n' || cur == data_end) {
 
             if (state == 2 && key_len > 0 && value_len > 0) {
-                int n = finalize_pair(key, key_len, value, value_len, forced_type_state, node_buffer);;
+                int n = finalize_pair(
+                    key, key_len, value, value_len, 
+                    forced_type_state, node_buffer
+                );
                 *length_used += n;
                 if (node_buffer) {
                     node_buffer+=n;
@@ -658,7 +663,7 @@ static char is_numeric(uint8_t* val, uint64_t val_len)
 
 
 static int finalize_pair(key, key_len, val, val_len, type_state, node_buffer)
-    uint8_t* key;
+    const uint8_t* key;
     uint16_t key_len;
     uint8_t* val;
     uint64_t val_len;

@@ -1,1 +1,20 @@
 /build
+
+
+# Specific CMake cache and generated configuration files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# User-specific presets (keep shared CMakePresets.json, ignore user ones)
+CMakeUserPresets.json
+
+# IDE-specific CMake files
+CMakeLists.txt.user*

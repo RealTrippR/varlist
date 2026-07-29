@@ -87,5 +87,8 @@ int main(argc, argv)
     fclose(fptr);
     fptr=NULL;
     
+
+    getc(stdin);
+
     return 0;
 }

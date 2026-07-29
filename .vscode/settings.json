@@ -2,10 +2,12 @@
     "files.associations": {
         "*.embeddedhtml": "html",
         "*.ejs": "html",
+        "*.asm": "nasm",
         "llvl_env.89.h": "c",
         "stdio.h": "c",
         "test_common.h": "c",
         "inttypes.h": "c",
         "llvl_var.89.h": "c"
-    }
+    },
+    "debug.allowBreakpointsEverywhere": true
 }
