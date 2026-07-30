@@ -33,3 +33,20 @@ target_link_libraries(llvl_var_cc
     INTERFACE
         llvl_var
 )
+
+
+add_subdirectory(tests)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+    if(WIN32)
+        target_sources(llvl_var PRIVATE
+            llvl_var/deps/streql/streql_x64_win.obj
+            llvl_var/deps/streql/strneql_x64_win.obj
+        )
+    else()
+        target_sources(llvl_var PRIVATE
+            llvl_var/deps/streql/streql_x64_unix.o
+            llvl_var/deps/streql/strneql_x64_unix.o
+        )
+    endif()
+endif()
