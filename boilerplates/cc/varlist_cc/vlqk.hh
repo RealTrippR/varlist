@@ -124,11 +124,11 @@ namespace vlqk {
             }
         }
 
-        inline std::pair<const i8*,size_t> getNodes() const {
+        inline std::pair<const i8*,size_t> get_nodes() const {
             return { data.data(),nsize};
         }
 
-        inline std::pair<i8*, size_t> getNodes() {
+        inline std::pair<i8*, size_t> get_nodes() {
             return { data.data(),nsize };
         }
 
