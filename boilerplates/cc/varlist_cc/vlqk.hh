@@ -42,6 +42,7 @@ form of Artificial Intelligence.
 #include <istream>
 #include <fstream>
 #include <filesystem>
+#include <stdexcept>
 
 #include <varlist_cc/varlist.hh>
 
@@ -50,6 +51,18 @@ namespace vlqk {
     using namespace vlst;
 
     class Varlist {
+    public:
+        Varlist() = default;
+        Varlist(const std::filesystem::path path) {
+            if (load(path) != vlst::Result::Success) {
+                throw std::runtime_error("Failed to parse varlist from file.");
+            }
+        }
+        Varlist(std::istream& stream) {
+            if (load(stream) != vlst::Result::Success) {
+                throw std::runtime_error("Failed to parse varlist from stream.");
+            }
+        }
     public:
 
 
