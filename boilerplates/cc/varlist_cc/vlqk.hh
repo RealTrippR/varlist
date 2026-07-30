@@ -63,9 +63,8 @@ namespace vlqk {
                 throw std::runtime_error("Failed to parse varlist from stream.");
             }
         }
+
     public:
-
-
         inline Result load(const std::filesystem::path path) {
             std::ifstream f;
             f.open(path, std::ios::binary);
