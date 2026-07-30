@@ -1,3 +1,7 @@
+#pragma once
+#ifndef VLQK_HH
+#define VLQK_HH
+
 /* VARLIST QUICK 
 * A heavily simplified version of the varlist
 * system, designed to make it amazing simple
@@ -31,6 +35,7 @@ form of Artificial Intelligence.
 */
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <unordered_map>
 #include <optional>
@@ -38,24 +43,136 @@ form of Artificial Intelligence.
 #include <fstream>
 #include <filesystem>
 
+#include <varlist_cc/varlist.hh>
+
 
 namespace vlqk {
-    #include <varlist_cc/varlist.hh>
     using namespace vlst;
 
     class Varlist {
     public:
-        inline Result load(const char* filepath, std::ios::openmode openmode) {
 
-        }
-        inline Result load(const std::filesystem::path path, std::ios::openmode openmode) {
 
+        inline Result load(const std::filesystem::path path) {
+            std::ifstream f;
+            f.open(path, std::ios::binary);
+
+            return load(f);
         }
+
         inline Result load(std::istream& stream)
         {
-            
+            Result r;
+            std::vector<vlst::i8> src = std::vector<vlst::i8>(
+                std::istreambuf_iterator<char>(stream),
+                std::istreambuf_iterator<char>()
+            );
+
+
+
+            size_t size = 0;
+            r = vlst::parse(src.data(), src.size(),  &size, nullptr);
+            if (r != Result::Success) {
+                return r;
+            }
+            if (size == 0) {
+                return Result::Success;
+            }
+            data.resize(size);
+            vlst::parse(src.data(), src.size(), &size, data.data());
+
+
+            nsize = data.size();
+            size_t ssize = 0;
+            vlst::storeStrings(data.data(), nsize, nullptr, &ssize, true);
+
+            if (1) {
+                data.resize(nsize + ssize); 
+
+                vlst::storeStrings(data.data(), nsize, data.data()+nsize, &ssize, true);
+
+                // add nodes to node lookup table
+               
+                Node* cur = reinterpret_cast<Node*>(data.data());
+                Node* end = reinterpret_cast<Node*>(data.data() + nsize);
+
+                while (cur < end)
+                {
+                    std::pair<const char*, i16> nmp = cur->getName();
+                    nodeLookup[nmp.first] = cur;
+
+                    cur = reinterpret_cast<Node*>(
+                        reinterpret_cast<i8*>(cur) + cur->getSize());
+                }
+
+                return Result::Success;
+            }
+            else {
+                return Result::ErrInvalid;
+            }
         }
+
+        inline std::pair<const i8*,size_t> getNodes() const {
+            return { data.data(),nsize};
+        }
+
+        inline std::pair<i8*, size_t> getNodes() {
+            return { data.data(),nsize };
+        }
+
+        inline std::string_view get_string(std::string_view name)  {
+            auto it = nodeLookup.find(name);
+            if (it == nodeLookup.end()) return {};
+            Node* n = it->second;
+            if (n && n->getType() == NodeType::String) {
+                return (static_cast<NodeString*>(n)->value);
+            }
+            return {};
+        }
+
+        inline i32* get_i32(std::string_view name) {
+            auto it = nodeLookup.find(name);
+            if (it == nodeLookup.end()) return nullptr;
+            Node* n = it->second;
+            if (n && n->getType() == NodeType::I32) {
+                return &(static_cast<NodeI32*>(n)->value);
+            }
+            return NULL;
+        }
+
+        inline i64* get_i64(std::string_view name) {
+            auto it = nodeLookup.find(name);
+            if (it == nodeLookup.end()) return nullptr;
+            Node* n = it->second;
+            if (n && n->getType() == NodeType::I64) {
+                return &(static_cast<NodeI64*>(n)->value);
+            }
+            return NULL;
+        }
+
+        inline f32* get_f32(std::string_view name) {
+            Node* n = nodeLookup[name];
+            if (n && n->getType() == NodeType::F32) {
+                return &(static_cast<NodeF32*>(n)->value);
+            }
+            return NULL;
+        }
+
+        inline f64* get_f64(std::string_view name) {
+            auto it = nodeLookup.find(name);
+            if (it == nodeLookup.end()) return nullptr;
+            Node* n = it->second;
+
+            if (n && n->getType() == NodeType::F64) {
+                return &(static_cast<NodeF64*>(n)->value);
+            }
+            return NULL;
+        }
+
     public:
-        std::vector<u8> data;
+        std::unordered_map<std::string_view, Node*> nodeLookup;
+        std::vector<i8> data;
+        size_t nsize = 0;
     };
 }
+#endif // !VLQK_HH

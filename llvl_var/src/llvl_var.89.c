@@ -401,6 +401,37 @@ var_i8 VAR_SIZEOF_NODE(const void* node)
     return tbl[t];
 }
 
+char* VAR_NODE_NAME(const void* node, var_i16* name_len)
+{
+    const VAR_NODE_BASE* nb = node;
+    if (nb->type==VAR_NODE_TYPE_STRING) {
+        const VAR_NODE_STRING *nis = node;
+        *name_len = nis->nameLength;
+        return nis->name;
+    }
+    if (nb->type==VAR_NODE_TYPE_I32) {
+        const VAR_NODE_I32 *ni32 = node;
+        *name_len = ni32->nameLength;
+        return ni32->name;
+    }
+    if (nb->type==VAR_NODE_TYPE_I64) {
+        const VAR_NODE_I64 *ni64 = node;
+        *name_len = ni64->nameLength;
+        return ni64->name;
+    }
+    if (nb->type==VAR_NODE_TYPE_F32) {
+        const VAR_NODE_F32 *nf32 = node;
+        *name_len = nf32->nameLength;
+        return nf32->name;
+    }
+    if (nb->type==VAR_NODE_TYPE_F64) {
+        const VAR_NODE_F32 *nf64 = node;
+        *name_len = nf64->nameLength;
+        return nf64->name;
+    }
+    return NULL;
+}
+
 
 VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *string_buffer, var_size_t *string_size, char null_terminate)
 {
@@ -426,6 +457,9 @@ VAR_RESULT VAR_STORE_STRINGS(void *structure, var_size_t structure_size, void *s
                 (*string_size) += as_i64->nameLength;
             }
 
+            if (null_terminate) {
+                (*string_size)++; // for the name...
+            }
             structure = (char*)structure + VAR_SIZEOF_NODE(structure);    
         }
         

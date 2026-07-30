@@ -61,7 +61,7 @@ typedef struct {
 typedef struct {
     VAR_NODE_TYPE   type;
     var_i16         nameLength;
-    char*           name;
+    char*           name; // by default, the names of nodes are not null terminated, the length is determined by the nameLength field. Call VAR_STORE_STRINGS on a list of nodes with the null-terminator option enabled to force null-terminated strings. 
     var_i64         valueLength;
     char*           value;
 } VAR_NODE_STRING;
@@ -70,13 +70,13 @@ typedef struct {
     VAR_NODE_TYPE   type;
     var_i16         nameLength;
     var_i32         value;
-    char*           name;
+    char*           name;  // by default, the names of nodes are not null terminated, the length is determined by the nameLength field. Call VAR_STORE_STRINGS on a list of nodes with the null-terminator option enabled to force null-terminated strings. 
 } VAR_NODE_I32;
 
 typedef struct {
     VAR_NODE_TYPE   type;
     var_i16         nameLength;
-    char*           name;
+    char*           name;  // by default, the names of nodes are not null terminated, the length is determined by the nameLength field. Call VAR_STORE_STRINGS on a list of nodes with the null-terminator option enabled to force null-terminated strings. 
     var_i64         value;
 } VAR_NODE_I64;
 
@@ -84,13 +84,13 @@ typedef struct {
     VAR_NODE_TYPE   type;
     var_i16         nameLength;
     var_f32         value;
-    char*           name;
+    char*           name;  // by default, the names of nodes are not null terminated, the length is determined by the nameLength field. Call VAR_STORE_STRINGS on a list of nodes with the null-terminator option enabled to force null-terminated strings. 
 } VAR_NODE_F32;
 
 typedef struct {
     VAR_NODE_TYPE   type;
-    var_i16         nameLength;
-    char*           name;
+    var_i16         nameLength; 
+    char*           name; // by default, the names of nodes are not null terminated, the length is determined by the nameLength field. Call VAR_STORE_STRINGS on a list of nodes with the null-terminator option enabled to force null-terminated strings. 
     var_f64         value;
 } VAR_NODE_F64;
 
@@ -133,8 +133,24 @@ VAR_SUCCESS: EVERY CALL
 */
 VAR_RESULT VAR_STORE_STRINGS(void *structure_buffer, var_size_t structure_size, void *string_buffer, var_size_t *string_size, char null_terminate);
 
+/*
+Returns the size of a node, in bytes.
+
+@returns
+var_i8: sizeof(node)
+*/
 var_i8 VAR_SIZEOF_NODE(const void* node);
 
+/*
+Retrieves the name of a node.
+@param node - the node to retrieve the name of.
+@pram name_len - the length of the name, in bytes, excluding the null terminator(if it exists.) Note that by default, the names of nodes are not null terminated.
+
+@returns
+char*: a pointer to the name.
+*/
+
+char* VAR_NODE_NAME(const void* node, var_i16* name_len);
 
 
 /*

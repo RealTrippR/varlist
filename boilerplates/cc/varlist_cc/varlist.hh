@@ -1,3 +1,7 @@
+#pragma once
+#ifndef  VARLIST_HH
+#define VARLIST_HH
+
 /*
 Robins Free of Charge & Open Source Public License 25
 
@@ -25,23 +29,28 @@ be included in datasets used for the purpose of training AI, or be used in the a
 form of Artificial Intelligence.
 */
 
-#pragma once
 #include <cstdint>
+#include <string_view>
+
+#include <utility>
 
 namespace vlst {
 
 
-        
     using i8  = std::int8_t;
+    using u8  = std::uint8_t;
     using i16 = std::int16_t;
     using u16 = std::uint16_t;
     using i32 = std::int32_t;
+    using u32 = std::uint32_t;
     using i64 = std::int64_t;
+    using u64 = std::uint64_t;
     using f32 = float;
     using f64 = double;
 
     namespace vc {
         extern "C" i8 VAR_SIZEOF_NODE(const void* node);
+        extern "C" const char* VAR_NODE_NAME(const void* node, i16* namelen);
     }
 
     enum class Result {
@@ -65,11 +74,17 @@ namespace vlst {
         NodeType type;
         Node(NodeType t) : type(t) {}
     public:
-        inline NodeType getType() {
+        inline NodeType getType() const {
             return type;
         }
-        inline i8 getSize() {
+        inline i8 getSize() const {
             return vc::VAR_SIZEOF_NODE(this);
+        }
+        inline std::pair<const char*,i16> getName() const {
+            const char* n;
+            i16 nn;
+            n = vc::VAR_NODE_NAME(this, &nn);
+            return { n,nn };
         }
     };
 
@@ -120,6 +135,7 @@ namespace vlst {
     };
 
 
+
     namespace vc {  
         extern "C" Result VAR_CHECK_VALIDITY(const i8* data, size_t data_len, i32* offending_line_buffer, i32 offending_line_buffer_size);
         extern "C" Result VAR_PARSE(const i8* data, size_t data_len, size_t* length_used, i8* structure_buffer);
@@ -127,7 +143,7 @@ namespace vlst {
         extern "C" NodeI32*       VAR_GET_NODE_I32(const char* name, const i8* structure_buffer, const size_t structure_buffer_size);
         extern "C" NodeI64*       VAR_GET_NODE_I64(const char* name, const i8* structure_buffer, const size_t structure_buffer_size);
         extern "C" NodeF32*       VAR_GET_NODE_F32(const char* name, const i8* structure_buffer, const size_t structure_buffer_size);
-        extern "C"  NodeF64*       VAR_GET_NODE_F64(const char* name, const i8* structure_buffer, const size_t structure_buffer_size);
+        extern "C" NodeF64*       VAR_GET_NODE_F64(const char* name, const i8* structure_buffer, const size_t structure_buffer_size);
         extern "C" NodeString*    VAR_GET_NODE_STRING(const char* name, const i8* structure_buffer, const size_t structure_buffer_size);
     }
 
@@ -254,3 +270,4 @@ namespace vlst {
         return vc::VAR_GET_NODE_STRING(name,structure_buffer,structure_buffer_size);
     }
 }
+#endif // ! VARLIST_HH
