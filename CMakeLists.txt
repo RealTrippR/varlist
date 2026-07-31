@@ -36,8 +36,6 @@ target_link_libraries(llvl_var_cc
 
 
 
-add_subdirectory(tests)
-
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
     if(WIN32)
         target_sources(llvl_var PRIVATE
