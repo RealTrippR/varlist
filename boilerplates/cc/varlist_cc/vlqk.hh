@@ -79,7 +79,10 @@ namespace vlqk {
                 std::istreambuf_iterator<char>(stream),
                 std::istreambuf_iterator<char>()
             );
-
+            
+            if (src.size() == 0) {
+                return Result::Success;
+            }
 
 
             size_t size = 0;
